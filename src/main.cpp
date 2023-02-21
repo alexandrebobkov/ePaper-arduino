@@ -239,20 +239,25 @@ void Task2code (void * parameters) {
 } 
 
 void showUpdate(const char text[], const GFXfont* f) {
-  const char header[25] = "AWS IoT"; 
-  const char ip[25] = "IP: ";
-  const char ip_addr[] = "0.0.0.0";
-  const char footer[] = "\nby: Alexander Bobkov"; 
+  const char header[25] = "Networks IV\n"; 
+  const char ip[25] = "IP: 10.100.50.20";
+  const char ip_addr[] = "121.21.10.20";
+  const char footer[] = "\n\nWireless\nAutomation Board\n\nControlled via Cloud";
+  const char message[] = "Command received:\nRelay 1 ON";
   
   display.fillScreen(GxEPD_WHITE);
   display.setTextColor(GxEPD_BLACK);
   display.setFont(f);
-  display.setCursor(100, 20);
+  display.setCursor(80, 20);
   display.println(header);
   display.print(ip);
-  display.print(text);  
+  display.println(text);  
+  display.println(message);
   display.setTextColor(GxEPD_RED);
+  display.setFont(&FreeMonoBold9pt7b);
   display.println(footer);
+  display.setTextColor(GxEPD_BLACK);
+  
   display.update();
   //delay(5000);    
 }
