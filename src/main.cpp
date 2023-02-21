@@ -1,6 +1,8 @@
 /*
   ESP32-WROOM-32
   ePaper embeded system program written in style adopted for learning.
+  Adopted & written by: Alexander Bobkov
+  
 */
 #include "secrets.h"
 // Adopted libraries
