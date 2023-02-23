@@ -66,6 +66,16 @@ GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
 #define AWS_IOT_SUBSCRIBE_TOPIC3 "esp32/lamp3"
 #define AWS_IOT_SUBSCRIBE_TOPIC4 "esp32/lamp4"
 
+#define AWS_IOT_CHANNEL_1 "iot/ch1"
+#define AWS_IOT_CHANNEL_2 "iot/ch2"
+#define AWS_IOT_CHANNEL_3 "iot/ch3"
+#define AWS_IOT_CHANNEL_4 "iot/ch4"
+#define AWS_IOT_CHANNEL_5 "iot/ch5"
+
+#define LIGHT_SENSOR_PIN 34
+#define LED_PIN 32
+#define ANALOG_THRESHOLD 2050
+
 // Define tasks.
 TaskHandle_t Task1, Task2, Task3;
 
@@ -77,63 +87,81 @@ const int output_2 = 2;//4;
 const int output_22 = 22;
 const int output_23 = 21;
 char aws_msg[25] = "";
+char info_ip_addr[25] = "10.100.50.0";
+char display_msg[4][50] = {"", "", "", ""};
 
 WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
 
 void messageHandler(char* topic, byte* payload, unsigned int length)
 {
-  Serial.print("incoming: ");
+  Serial.print("Listening: ");
   Serial.println(topic);
  
-  /*##################### Lamp 1 #####################*/
-  /*
-  if ( strstr(topic, "esp32/lamp1") )
-  {
+  if (strstr(topic, "iot/ch1")) {
     StaticJsonDocument<200> doc;
     deserializeJson(doc, payload);
-    String Relay1 = doc["status"];
-    int r1 = Relay1.toInt();
-    if(r1==1)
-    {
-      digitalWrite(lamp1, HIGH);
-      Serial.print("Lamp1 is ON");
-    }
-    else if(r1==0)
-    {
-      digitalWrite(lamp1, LOW);
-      Serial.print("Lamp1 is OFF");
-    }
+    String Channel_1 = doc["status"];
+    int ch1 = Channel_1.toInt();
+    if(ch1==1)
+      Serial.print("Channel 1: 1");     
+    else if(ch1==0)
+      Serial.print("Channel 1: 0");     
   }
- */
+  if (strstr(topic, "iot/ch2")) {
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, payload);
+    String Channel_2 = doc["status"];
+    int ch2 = Channel_2.toInt();
+    if(ch2==1)
+      Serial.print("Channel 2: 1");     
+    else if(ch2==0)
+      Serial.print("Channel 2: 0");     
+  }
+  if (strstr(topic, "iot/ch3")) {
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, payload);
+    String Channel_3 = doc["status"];
+    int ch3 = Channel_3.toInt();
+    if(ch3==1)
+      Serial.print("Channel 3: 1");     
+    else if(ch3==0)
+      Serial.print("Channel 3: 0");     
+  }
+  if (strstr(topic, "iot/ch4")) {
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, payload);
+    String Channel_4 = doc["status"];
+    int ch4 = Channel_4.toInt();
+    if(ch4==1)
+      Serial.print("Channel 4: 1");     
+    else if(ch4==0)
+      Serial.print("Channel 4: 0");     
+  }
+  if (strstr(topic, "iot/ch5")) {
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, payload);
+    String Channel_5 = doc["status"];
+    int ch5 = Channel_5.toInt();
+    if(ch5==1)
+      Serial.print("Channel 5: 1");     
+    else if(ch5==0)
+      Serial.print("Channel 5: 0");     
+  }
+
 /*##################### Lamp 2 #####################*/
-  if ( strstr(topic, "esp32/lamp2") )
-  {
+  if ( strstr(topic, "esp32/lamp2") ) {
     StaticJsonDocument<200> doc;
     deserializeJson(doc, payload);
     String Relay2 = doc["status"];
     int r2 = Relay2.toInt();
-    if(r2==1)
-    {
-      //digitalWrite(lamp2, HIGH);
+    if(r2==1)     {
       Serial.print("Resume task 2");
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("  Task 2 ");
-      //lcd.setCursor(0,1);
-      //lcd.print("  Resume ");
       vTaskResume(Task2);
       
     }
-    else if(r2==0)
-    {
-      //digitalWrite(lamp2, LOW);
+    else if(r2==0)     {
       Serial.print("Suspend task 2");
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("  Task 2 ");
-      //lcd.setCursor(0,1);
-      //lcd.print("  Suspend ");
       vTaskSuspend(Task2);
       
     }
@@ -165,33 +193,27 @@ void messageHandler(char* topic, byte* payload, unsigned int length)
     deserializeJson(doc, payload);
     String Relay4 = doc["status"];
     String Relay4_msg = doc["message"];
+    String Relay4_ip_addr = doc["ip_addr"];
     strcpy(aws_msg, Relay4_msg.c_str());
+    strcpy(info_ip_addr, Relay4_ip_addr.c_str());
     int r4 = Relay4.toInt();
     if(r4==1)
     {
       //digitalWrite(lamp4, HIGH);
       Serial.print("Lamp4 is ON");
+      //info_ip_addr = "10.100.50.16";
       vTaskResume(Task3);
       //delay(500);
       //vTaskSuspend(Task3);
       Serial.println("Lamp4 is ON");
       Serial.println(Relay4_msg);
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("  LED 4 ");
-      //lcd.setCursor(0,1);
-      //lcd.print("  ON ");
+      Serial.println(Relay4_ip_addr);
     }
     else if(r4==0)
     {
       //digitalWrite(lamp4, LOW);
       Serial.print("Lamp4 is OFF");
       Serial.println(Relay4_msg);
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("  LED 4 ");
-      //lcd.setCursor(0,1);
-      //lcd.print("  OFF ");
     }
   }
   Serial.println();
@@ -211,7 +233,7 @@ void Task1code (void * parameters) {
       digitalWrite(output_1, LOW);
       vTaskDelay(1500);                
     }
-  }
+}
 
 void Task2code (void * parameters) {  
   Serial.print("Task 2 running on core # ");
@@ -231,26 +253,33 @@ void Task2code (void * parameters) {
       vTaskDelay(125);
       digitalWrite(output_2, LOW);
       vTaskDelay(1500); 
-      //vTaskSuspend(NULL);         
-      //vTaskDelete(NULL);   
+      Serial.println(analogRead(LIGHT_SENSOR_PIN));  
     }
-    //vTaskSuspend(NULL);    
-    //vTaskDelete(NULL);  
 } 
 
-void showUpdate(const char text[], const GFXfont* f) {
+void showUpdate(char ip[], const char text[], const GFXfont* f) {
   const char header[25] = "Networks IV\n"; 
-  const char ip[25] = "IP: 10.100.50.20";
+  //const char ip[25] = "IP: 10.100.50.20";
   const char ip_addr[] = "121.21.10.20";
-  const char footer[] = "\n\nWireless\nAutomation Board\n\nControlled via Cloud";
+  const char footer[] = "\nWireless\nAutomation Board\n\nControlled via Cloud";
   const char message[] = "Command received:\nRelay 1 ON";
+  //strcpy(ip, "10.100.50.16");
   
+  display.updateWindow(70,20,300,400,false);
   display.fillScreen(GxEPD_WHITE);
   display.setTextColor(GxEPD_BLACK);
   display.setFont(f);
   display.setCursor(80, 20);
   display.println(header);
-  display.print(ip);
+  //display.setTextColor(GxEPD_LIGHTGREY);
+  int x, y;
+  for (x = 2; x <= 300; x+=4) {
+    for (y=250; y <= 400; y +=4) {
+      display.drawPixel(x, y, GxEPD_BLACK);
+    }
+  }
+  display.drawRect(2,250,298,148, GxEPD_RED);
+  display.println(ip);
   display.println(text);  
   display.println(message);
   display.setTextColor(GxEPD_RED);
@@ -270,16 +299,7 @@ void TaskScreen (void * parameters) {
     display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false);
     display.setRotation(3);
     display.fillScreen(GxEPD_WHITE);
-    showUpdate(aws_msg, &FreeMonoBold12pt7b);
-      //showFont("FreeMonoBold18pt7b", &FreeMonoBold18pt7b);
-      //showFont("FreeMonoBold24pt7b", &FreeMonoBold24pt7b);
-      //display.drawCornerTest();
-      //vTaskDelay(30);
-      //display.drawPaged(showFontCallback);
-      //display.setRotation(0);      
-      //display.powerDown();     
-    //vTaskDelay(5000);
-    //vTaskDelete(NULL);
+    showUpdate(info_ip_addr, aws_msg, &FreeMonoBold12pt7b);
     vTaskSuspend(NULL);
   } 
 } 
@@ -295,6 +315,9 @@ void setup()
 
   Serial.println("setup done");
 
+
+  pinMode(LED_PIN, OUTPUT);
+  //digitalWrite(LED_PIN, HIGH);
   pinMode(output_1, OUTPUT);
   digitalWrite(output_1, HIGH);
   pinMode(output_2, OUTPUT);
@@ -312,7 +335,6 @@ void setup()
   WiFi.setHostname(hostname.c_str());
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   
-
   Serial.println("Connecting to Wi-Fi");
   
   while (WiFi.status() != WL_CONNECTED)
@@ -355,102 +377,20 @@ void setup()
   Serial.println("AWS IoT Connected!");  
 }
 
-
-
 void loop()
 {
-  //showBoat2();
-  //delay(2000);  
-  //showBitmapExample();
-  //delay(2000);
+
+  int analogValue = analogRead(LIGHT_SENSOR_PIN);
+  if (analogValue < ANALOG_THRESHOLD)
+    digitalWrite(LED_PIN, HIGH);
+  else
+    digitalWrite(LED_PIN, LOW);
 #if !defined(__AVR)
-  //drawCornerTest();
-  //showFont("FreeMonoBold9pt7b", &FreeMonoBold9pt7b);
-  //showFont("FreeMonoBold12pt7b", &FreeMonoBold12pt7b);
-  // //showUpdate("AWS IoT", &FreeMonoBold12pt7b);
-  //showFont("FreeMonoBold18pt7b", &FreeMonoBold18pt7b);
-  //showFont("FreeMonoBold24pt7b", &FreeMonoBold24pt7b);
+
 #else
-  //display.drawCornerTest();
-  // //delay(2000);
-  //display.drawPaged(showFontCallback);
+
 #endif
-  // //display.powerDown();
-  // //delay(10000);
+
   client.loop();
   delay(1000);
 }
-
-/*void showWifiStatus(const char text[], const GFXfont* f) {
-  const char wifi_status[25] = "AWS IoT"; 
-  const char ip[] = "IP: ";
-  const char ip_addr[] = "0.0.0.0";
-  const char footer[] = "\nby: Alexander Bobkov";  
-  //display.fillScreen(GxEPD_WHITE);
-  display.setTextColor(GxEPD_BLACK);
-  display.setFont(f);
-  display.setCursor(100, 200);  
-  display.setTextColor(GxEPD_RED);
-  display.println(text);
-  display.update();
-}
-
-
-
-void showInfo(const char name[], const GFXfont* f) {
-  const char header[] = "AWS IoT"; 
-  const char ip_addr[] = "IP: ";
-  const char footer[] = "\nby: Alexander Bobkov";  
-  display.fillScreen(GxEPD_WHITE);
-  display.setTextColor(GxEPD_BLACK);
-  // partial update to full screen to preset for partial update of box window
-  // (this avoids strange background effects)
-  // display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false);
-  display.setFont(f);
-  display.setCursor(5, 20);
-  //display.println();
-  display.println(header);
-  //display.println();
-  display.println(ip_addr);
-  //display.println();
-  display.println(name);
-  display.setTextColor(GxEPD_RED);
-  display.println(footer);
-//#if defined(HAS_RED_COLOR)
-//  display.setTextColor(GxEPD_RED);
-//  display.println(const char ["AWS IoT"]);
-//#endif
-  display.update();
-  delay(5000);  
-}
-
-void showFont(const char name[], const GFXfont* f)
-{
-  display.fillScreen(GxEPD_WHITE);
-  display.setTextColor(GxEPD_BLACK);
-  display.setFont(f);
-  display.setCursor(0, 0);
-  display.println();
-  display.println(name);
-#if defined(HAS_RED_COLOR)
-  display.setTextColor(GxEPD_RED);
-#endif
-  display.update();
-  delay(5000);
-}
-*/
-
-
-/*
-void setup()
-{
-  pinMode(LED_BUILTIN, OUTPUT);
-}
-
-void loop() {
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(1000);
-  digitalWrite(LED_BUILTIN, LOW);
-  delay(1000);
-}
-*/
