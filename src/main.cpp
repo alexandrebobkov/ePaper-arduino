@@ -342,6 +342,8 @@ void setup()
     delay(500);
     Serial.print(".");
   }
+  Serial.print("\nIP: ");
+  Serial.println(WiFi.localIP());
 
   // Configure WiFiClientSecure to use the AWS IoT device credentials
   net.setCACert(AWS_CERT_CA);
