@@ -5,12 +5,38 @@
   Adopted & written by: Alexander Bobkov
   Feb 25, 2023
 */
+
 #include "secrets.h"
+#include <WiFiClientSecure.h>             // ESP32 library
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+//#include "WiFi.h"
+#include <WiFi.h>
+#include <Wire.h> 
+#include <GxEPD.h>
+#include <GxGDEW042Z15/GxGDEW042Z15.h>    // 4.2" b/w/r
+#include GxEPD_BitmapExamples
+// FreeFonts from Adafruit_GFX
+#include <Fonts/FreeMonoBold9pt7b.h>
+#include <Fonts/FreeMonoBold12pt7b.h>
+#include <Fonts/FreeMonoBold18pt7b.h>
+#include <Fonts/FreeMonoBold24pt7b.h>
+#include <GxIO/GxIO_SPI/GxIO_SPI.h>
+#include <GxIO/GxIO.h>
+
+/*
+#include "secrets.h"
+#include <Arduino.h>
+#include <Arduino_GFX_Library.h>
 // Adopted libraries
 //#include <GxGDEW042Z15.h>
 #include "GxGDEW042Z15.h"                 // ePaper WaveShare screen 4.2" b/w/r
 #include "GxIO.h"
 #include "GxIO_SPI.h"
+
+//#include <GxGDEW042Z15.h>                 // ePaper WaveShare screen 4.2" b/w/r
+//#include <GxIO.h>
+//#include <GxIO_SPI.h>
 
 #include <WiFiClientSecure.h>             // ESP32 library
 #include <PubSubClient.h>
@@ -18,7 +44,7 @@
 //#include "WiFi.h"
 #include <WiFi.h>
 #include <Wire.h> 
-//#include <GxEPD.h>
+#include <GxEPD.h>
 //#include <GxGDEW042Z15/GxGDEW042Z15.h>    // 4.2" b/w/r
 #include GxEPD_BitmapExamples
 // FreeFonts from Adafruit_GFX
@@ -28,6 +54,7 @@
 #include <Fonts/FreeMonoBold24pt7b.h>
 //#include <GxIO/GxIO_SPI/GxIO_SPI.h>
 //#include <GxIO/GxIO.h>
+*/
 
 #if defined(ESP8266)
 GxIO_Class io(SPI, /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2); // arbitrary selection of D3(=0), D4(=2), selected for default of GxEPD_Class
@@ -61,10 +88,12 @@ GxIO_Class io(SPI, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9); // arbitrary selection of
 GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
 #endif
 
+/*
 #define AWS_IOT_SUBSCRIBE_TOPIC1 "esp32/lamp1"
 #define AWS_IOT_SUBSCRIBE_TOPIC2 "esp32/lamp2"
 #define AWS_IOT_SUBSCRIBE_TOPIC3 "esp32/lamp3"
 #define AWS_IOT_SUBSCRIBE_TOPIC4 "esp32/lamp4"
+*/
 
 #define AWS_IOT_CHANNEL_1 "iot/ch1"
 #define AWS_IOT_CHANNEL_2 "iot/ch2"
@@ -72,20 +101,20 @@ GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
 #define AWS_IOT_CHANNEL_4 "iot/ch4"
 #define AWS_IOT_CHANNEL_5 "iot/ch5"
 
-#define LIGHT_SENSOR_PIN 34
-#define LED_PIN 32
-#define ANALOG_THRESHOLD 2050
+#define LIGHT_SENSOR_PIN 34   // analog in pin # for a light sensor
+#define LED_PIN 32            // pin # of LED controlled by light sensor
+#define ANALOG_THRESHOLD 2050 // threshhold for analog input when logical 0 should become logical 1
 
 // Define tasks.
-TaskHandle_t Task1, Task2, Task3;
-
-//void Task3 (void *pvParameters);
+TaskHandle_t Task1, Task2, Task3;   // For prototyping purposes these tasks control LEDs based on received command
 
 // Define output pins
+const int output_2 = 2;//4;   // built-in LED pin #
+// output pins that will be used to control relay; for now they control LEDs
 const int output_1 = 19;
-const int output_2 = 2;//4;
 const int output_22 = 22;
 const int output_23 = 21;
+
 char aws_msg[25] = "";
 char info_ip_addr[25] = "10.100.50.0";
 char display_msg[4][50] = {"", "", "", ""};
@@ -93,20 +122,28 @@ char display_msg[4][50] = {"", "", "", ""};
 WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
 
+// Section of code that processes JSON command(s) received from AWS IoT
 void messageHandler(char* topic, byte* payload, unsigned int length)
 {
   Serial.print("Listening: ");
   Serial.println(topic);
  
+ // Controlls dummy task to blink built-in LED
   if (strstr(topic, "iot/ch1")) {
     StaticJsonDocument<200> doc;
     deserializeJson(doc, payload);
     String Channel_1 = doc["status"];
     int ch1 = Channel_1.toInt();
-    if(ch1==1)
-      Serial.print("Channel 1: 1");     
-    else if(ch1==0)
-      Serial.print("Channel 1: 0");     
+    if(ch1==1) {
+      Serial.println("Channel 1: Message received.");
+      Serial.println("Channel 1: Status = 1; LED task resume.");  
+      vTaskResume(Task2);
+    }   
+    else if(ch1==0) {
+      Serial.println("Channel 1: Message received.");
+      Serial.println("Channel 1: Status = 0; LED task suspend.");   
+      vTaskSuspend(Task2);  
+    }     
   }
   if (strstr(topic, "iot/ch2")) {
     StaticJsonDocument<200> doc;
@@ -132,11 +169,22 @@ void messageHandler(char* topic, byte* payload, unsigned int length)
     StaticJsonDocument<200> doc;
     deserializeJson(doc, payload);
     String Channel_4 = doc["status"];
+    String Channel_4_msg = doc["message"];
+    String Channel_4_ip_addr = doc["ip_addr"];
     int ch4 = Channel_4.toInt();
-    if(ch4==1)
-      Serial.print("Channel 4: 1");     
-    else if(ch4==0)
-      Serial.print("Channel 4: 0");     
+    if(ch4==1) {
+      Serial.println("R4 is ON");
+      vTaskResume(Task3);
+      Serial.print("Resumed task");
+      Serial.println(Channel_4_msg);
+      Serial.println(Channel_4_msg);
+      Serial.println(Channel_4_ip_addr);
+    } 
+    else if(ch4==0) {
+      Serial.println("R4 is OFF");
+      Serial.print("Paused task");
+      Serial.println(Channel_4_msg);
+    }     
   }
   if (strstr(topic, "iot/ch5")) {
     StaticJsonDocument<200> doc;
@@ -148,75 +196,6 @@ void messageHandler(char* topic, byte* payload, unsigned int length)
     else if(ch5==0)
       Serial.print("Channel 5: 0");     
   }
-
-/*##################### Lamp 2 #####################*/
-  if ( strstr(topic, "esp32/lamp2") ) {
-    StaticJsonDocument<200> doc;
-    deserializeJson(doc, payload);
-    String Relay2 = doc["status"];
-    int r2 = Relay2.toInt();
-    if(r2==1)     {
-      Serial.print("Resume task 2");
-      vTaskResume(Task2);
-      
-    }
-    else if(r2==0)     {
-      Serial.print("Suspend task 2");
-      vTaskSuspend(Task2);
-      
-    }
-  }
- 
-/*##################### Lamp 3 #####################*/
-  if ( strstr(topic, "esp32/lamp3") )
-  {
-    StaticJsonDocument<200> doc;
-    deserializeJson(doc, payload);
-    String Relay3 = doc["status"];
-    int r3 = Relay3.toInt();
-    if(r3==1)
-    {
-      //digitalWrite(lamp3, LOW);
-      Serial.print("Lamp3 is ON");
-    }
-    else if(r3==0)
-    {
-      //digitalWrite(lamp3, HIGH);
-      Serial.print("Lamp3 is OFF");
-    }
-  }
- 
-/*##################### Lamp 4 #####################*/
-  if ( strstr(topic, "esp32/lamp4") )
-  {
-    StaticJsonDocument<200> doc;
-    deserializeJson(doc, payload);
-    String Relay4 = doc["status"];
-    String Relay4_msg = doc["message"];
-    String Relay4_ip_addr = doc["ip_addr"];
-    strcpy(aws_msg, Relay4_msg.c_str());
-    strcpy(info_ip_addr, Relay4_ip_addr.c_str());
-    int r4 = Relay4.toInt();
-    if(r4==1)
-    {
-      //digitalWrite(lamp4, HIGH);
-      Serial.print("Lamp4 is ON");
-      //info_ip_addr = "10.100.50.16";
-      vTaskResume(Task3);
-      //delay(500);
-      //vTaskSuspend(Task3);
-      Serial.println("Lamp4 is ON");
-      Serial.println(Relay4_msg);
-      Serial.println(Relay4_ip_addr);
-    }
-    else if(r4==0)
-    {
-      //digitalWrite(lamp4, LOW);
-      Serial.print("Lamp4 is OFF");
-      Serial.println(Relay4_msg);
-    }
-  }
-  Serial.println();
 }
 
 void Task1code (void * parameters) {
@@ -235,12 +214,15 @@ void Task1code (void * parameters) {
     }
 }
 
+// Dummy task. Runs to blink built-in LED. Indicates that board has started
 void Task2code (void * parameters) {  
   Serial.print("Task 2 running on core # ");
     Serial.println(xPortGetCoreID());
 
     for (;;) {
-    //for (int i=0; i<3; i++) {
+      // Blinkpattern: 3 quick flashes, pause
+      // Task runs forever unless paused/terminated from outside
+      // vTaskDelay() to be used as opposed to Delay()
       digitalWrite(output_2, HIGH);
       vTaskDelay(125);
       digitalWrite(output_2, LOW);
@@ -253,6 +235,7 @@ void Task2code (void * parameters) {
       vTaskDelay(125);
       digitalWrite(output_2, LOW);
       vTaskDelay(1500); 
+      Serial.print("Sensor value: ");
       Serial.println(analogRead(LIGHT_SENSOR_PIN));  
     }
 } 
@@ -261,11 +244,12 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   const char header[25] = "Networks IV\n"; 
   //const char ip[25] = "IP: 10.100.50.20";
   const char ip_addr[] = "121.21.10.20";
-  const char footer[] = "\nWireless\nAutomation Board\n\nControlled via Cloud";
+  //const char footer[] = "\nWireless\nAutomation Board\n\nControlled via Cloud";
+  const char footer[] = "\nAutomation Board";
   const char message[] = "Command received:\nRelay 1 ON";
   //strcpy(ip, "10.100.50.16");
   
-  display.updateWindow(70,20,300,400,false);
+  //display.updateWindow(70,20,300,400,false);
   display.fillScreen(GxEPD_WHITE);
   display.setTextColor(GxEPD_BLACK);
   display.setFont(f);
@@ -310,9 +294,7 @@ void setup()
   Serial.begin(115200);
   Serial.println();
   Serial.println("setup");
-
   display.init(115200); // enable diagnostic output on Serial
-
   Serial.println("setup done");
 
 
@@ -331,11 +313,11 @@ void setup()
   xTaskCreatePinnedToCore(TaskScreen, "Task3", 1000, NULL, 5, &Task3, 1);  
 
   WiFi.mode(WIFI_STA);
-  String hostname = "Alex IoT";
+  String hostname = "ESP32LF";
   WiFi.setHostname(hostname.c_str());
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   
-  Serial.println("Connecting to Wi-Fi");
+  Serial.println("Connecting to Wi-Fi ...");
   
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -352,6 +334,7 @@ void setup()
  
   // Connect to the MQTT broker on the AWS endpoint we defined earlier
   client.setServer(AWS_IOT_ENDPOINT, 8883);
+  //client.setServer(AWS_IOT_ENDPOINT, 443);
  
   // Create a message handler
   client.setCallback(messageHandler);
@@ -371,17 +354,23 @@ void setup()
   }
  
   // Subscribe to a topic
+  /*
   client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC1);
   client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC2);
   client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC3);
   client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC4);
+  */
+
+  client.subscribe(AWS_IOT_CHANNEL_1);
+  client.subscribe(AWS_IOT_CHANNEL_2);
+  client.subscribe(AWS_IOT_CHANNEL_3);
+  client.subscribe(AWS_IOT_CHANNEL_4);
  
   Serial.println("AWS IoT Connected!");  
 }
 
 void loop()
 {
-
   int analogValue = analogRead(LIGHT_SENSOR_PIN);
   if (analogValue < ANALOG_THRESHOLD)
     digitalWrite(LED_PIN, HIGH);
@@ -392,7 +381,6 @@ void loop()
 #else
 
 #endif
-
   client.loop();
   delay(1000);
 }
