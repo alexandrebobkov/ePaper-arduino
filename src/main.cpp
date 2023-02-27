@@ -23,6 +23,7 @@
 #include <Fonts/FreeMonoBold24pt7b.h>
 #include <GxIO/GxIO_SPI/GxIO_SPI.h>
 #include <GxIO/GxIO.h>
+//#include "GxIO.h"
 
 /*
 #include "secrets.h"
@@ -88,13 +89,6 @@ GxIO_Class io(SPI, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9); // arbitrary selection of
 GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
 #endif
 
-/*
-#define AWS_IOT_SUBSCRIBE_TOPIC1 "esp32/lamp1"
-#define AWS_IOT_SUBSCRIBE_TOPIC2 "esp32/lamp2"
-#define AWS_IOT_SUBSCRIBE_TOPIC3 "esp32/lamp3"
-#define AWS_IOT_SUBSCRIBE_TOPIC4 "esp32/lamp4"
-*/
-
 #define AWS_IOT_CHANNEL_1 "iot/ch1"
 #define AWS_IOT_CHANNEL_2 "iot/ch2"
 #define AWS_IOT_CHANNEL_3 "iot/ch3"
@@ -106,7 +100,7 @@ GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
 #define ANALOG_THRESHOLD 2050 // threshhold for analog input when logical 0 should become logical 1
 
 // Define tasks.
-TaskHandle_t Task1, Task2, Task3;   // For prototyping purposes these tasks control LEDs based on received command
+TaskHandle_t Task1, Task2, Task3, Task4, Task5;   // For prototyping purposes these tasks control LEDs based on received command
 
 // Define output pins
 const int output_2 = 2;//4;   // built-in LED pin #
@@ -115,8 +109,10 @@ const int output_1 = 19;
 const int output_22 = 22;
 const int output_23 = 21;
 
+int sensor_val = 0;
+
 char aws_msg[25] = "";
-char info_ip_addr[25] = "10.100.50.0";
+char info_ip_addr[16] = "010.100.050.000";
 char display_msg[4][50] = {"", "", "", ""};
 
 WiFiClientSecure net = WiFiClientSecure();
@@ -189,10 +185,14 @@ void messageHandler(char* topic, byte* payload, unsigned int length)
   if (strstr(topic, "iot/ch5")) {
     StaticJsonDocument<200> doc;
     deserializeJson(doc, payload);
-    String Channel_5 = doc["status"];
-    int ch5 = Channel_5.toInt();
-    if(ch5==1)
-      Serial.print("Channel 5: 1");     
+    String Channel_5_status = doc["status"];
+    int ch5 = Channel_5_status.toInt();
+    if(ch5==1) {
+      Serial.println("R5 is ON");
+      vTaskResume(Task4);
+      Serial.print("Resumed task");
+      Serial.println(Channel_5_status);
+    }     
     else if(ch5==0)
       Serial.print("Channel 5: 0");     
   }
@@ -262,6 +262,7 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
       display.drawPixel(x, y, GxEPD_BLACK);
     }
   }
+
   display.drawRect(2,250,298,148, GxEPD_RED);
   display.println(ip);
   display.println(text);  
@@ -269,12 +270,16 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   display.setTextColor(GxEPD_RED);
   display.setFont(&FreeMonoBold9pt7b);
   display.println(footer);
+  int v = analogRead(LIGHT_SENSOR_PIN);
+  char cstr[16];
+  display.println(itoa(v, cstr, 10));
   display.setTextColor(GxEPD_BLACK);
   
   display.update();
   //delay(5000);    
 }
-void TaskScreen (void * parameters) {  
+//void TaskScreen (void * parameters) {
+  void Task3code (void * parameters) {  
   Serial.print("Task 3 running on core # ");
   Serial.println(xPortGetCoreID());
 
@@ -310,7 +315,8 @@ void setup()
   // Create thread for task 2
   xTaskCreatePinnedToCore(Task2code, "Task2", 1000, NULL, 1, &Task2, 1);  
   // Create thread for task 3
-  xTaskCreatePinnedToCore(TaskScreen, "Task3", 1000, NULL, 5, &Task3, 1);  
+  //xTaskCreatePinnedToCore(TaskScreen, "Task3", 1000, NULL, 5, &Task3, 1);
+  xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);  
 
   WiFi.mode(WIFI_STA);
   String hostname = "ESP32LF";
@@ -325,7 +331,8 @@ void setup()
     Serial.print(".");
   }
   Serial.print("\nIP: ");
-  Serial.println(WiFi.localIP());
+  //Serial.println(WiFi.localIP());
+  //info_ip_addr[16] = "000.000.000.000";
 
   // Configure WiFiClientSecure to use the AWS IoT device credentials
   net.setCACert(AWS_CERT_CA);
@@ -354,13 +361,6 @@ void setup()
   }
  
   // Subscribe to a topic
-  /*
-  client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC1);
-  client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC2);
-  client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC3);
-  client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC4);
-  */
-
   client.subscribe(AWS_IOT_CHANNEL_1);
   client.subscribe(AWS_IOT_CHANNEL_2);
   client.subscribe(AWS_IOT_CHANNEL_3);
