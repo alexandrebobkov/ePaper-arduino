@@ -236,6 +236,7 @@ void Task2code (void * parameters) {
       digitalWrite(output_2, LOW);
       vTaskDelay(1500); 
       Serial.print("Sensor value: ");
+      //client.publish(AWS_IOT_CHANNEL_5, "0");
       Serial.println(analogRead(LIGHT_SENSOR_PIN));  
     }
 } 
@@ -339,6 +340,7 @@ void setup()
   net.setCertificate(AWS_CERT_CRT);
   net.setPrivateKey(AWS_CERT_PRIVATE);
  
+  client.publish(AWS_IOT_CHANNEL_5, "10");
   // Connect to the MQTT broker on the AWS endpoint we defined earlier
   client.setServer(AWS_IOT_ENDPOINT, 8883);
   //client.setServer(AWS_IOT_ENDPOINT, 443);
@@ -371,6 +373,11 @@ void setup()
 
 void loop()
 {
+  // Publishes value to MQTT
+  //int r = random();
+  //char cstr[16];
+  //client.publish(AWS_IOT_CHANNEL_5, itoa(r, cstr, 10));
+
   int analogValue = analogRead(LIGHT_SENSOR_PIN);
   if (analogValue < ANALOG_THRESHOLD)
     digitalWrite(LED_PIN, HIGH);
