@@ -99,6 +99,10 @@ GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
 #define LED_PIN 32            // pin # of LED controlled by light sensor
 #define ANALOG_THRESHOLD 2050 // threshhold for analog input when logical 0 should become logical 1
 
+struct Data {
+  const char* temp;
+};
+
 // Define tasks.
 TaskHandle_t Task1, Task2, Task3, Task4, Task5;   // For prototyping purposes these tasks control LEDs based on received command
 
@@ -106,7 +110,7 @@ TaskHandle_t Task1, Task2, Task3, Task4, Task5;   // For prototyping purposes th
 const int output_2 = 2;//4;   // built-in LED pin #
 // output pins that will be used to control relay; for now they control LEDs
 const int output_1 = 19;
-const int output_22 = 22;
+const int output_22 = 22;   // Pin 22
 const int output_23 = 21;
 
 int sensor_val = 0;
@@ -141,25 +145,35 @@ void messageHandler(char* topic, byte* payload, unsigned int length)
       vTaskSuspend(Task2);  
     }     
   }
+  // LED Table Lamp; active LOW
   if (strstr(topic, "iot/ch2")) {
     StaticJsonDocument<200> doc;
     deserializeJson(doc, payload);
     String Channel_2 = doc["status"];
     int ch2 = Channel_2.toInt();
-    if(ch2==1)
-      Serial.print("Channel 2: 1");     
-    else if(ch2==0)
-      Serial.print("Channel 2: 0");     
+    if(ch2==1) {
+      Serial.print("Channel 2: 1");
+      if (digitalRead(LED_PIN))         // Turn table lights on only if anbient light is low
+        digitalWrite(output_22, LOW);
+    }
+    else if(ch2==0) {
+      Serial.print("Channel 2: 0");   
+      digitalWrite(output_22, HIGH);  
+    }
   }
   if (strstr(topic, "iot/ch3")) {
     StaticJsonDocument<200> doc;
     deserializeJson(doc, payload);
     String Channel_3 = doc["status"];
     int ch3 = Channel_3.toInt();
-    if(ch3==1)
-      Serial.print("Channel 3: 1");     
-    else if(ch3==0)
-      Serial.print("Channel 3: 0");     
+    if(ch3==1) {
+      Serial.print("Channel 3: 1");  
+      vTaskResume(Task1);  
+    } 
+    else if(ch3==0) {
+      Serial.print("Channel 3: 0");  
+      vTaskSuspend(Task1);  
+    } 
   }
   if (strstr(topic, "iot/ch4")) {
     StaticJsonDocument<200> doc;
@@ -303,13 +317,14 @@ void setup()
   display.init(115200); // enable diagnostic output on Serial
   Serial.println("setup done");
 
-
   pinMode(LED_PIN, OUTPUT);
   //digitalWrite(LED_PIN, HIGH);
   pinMode(output_1, OUTPUT);
   digitalWrite(output_1, HIGH);
   pinMode(output_2, OUTPUT);
   digitalWrite(output_2, HIGH);
+  pinMode(output_22, OUTPUT);
+  digitalWrite(output_22, HIGH);
 
   // Create thread for task 1
   xTaskCreatePinnedToCore(Task1code, "Task1", 1000, NULL, 2, &Task1, 0);    
@@ -380,9 +395,9 @@ void loop()
 
   int analogValue = analogRead(LIGHT_SENSOR_PIN);
   if (analogValue < ANALOG_THRESHOLD)
-    digitalWrite(LED_PIN, HIGH);
-  else
     digitalWrite(LED_PIN, LOW);
+  else
+    digitalWrite(LED_PIN, HIGH);
 #if !defined(__AVR)
 
 #else
