@@ -97,7 +97,8 @@ GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
 
 #define LIGHT_SENSOR_PIN 34   // analog in pin # for a light sensor
 #define LED_PIN 32            // pin # of LED controlled by light sensor
-#define ANALOG_THRESHOLD 2050 // threshhold for analog input when logical 0 should become logical 1
+//#define ANALOG_THRESHOLD 2050 // threshhold for analog input when logical 0 should become logical 1
+#define ANALOG_THRESHOLD 1800 // threshhold for analog input when logical 0 should become logical 1
 
 struct Data {
   const char* temp;
@@ -105,6 +106,7 @@ struct Data {
 
 // Define tasks.
 TaskHandle_t Task1, Task2, Task3, Task4, Task5;   // For prototyping purposes these tasks control LEDs based on received command
+TaskHandle_t LampTask;
 
 // Define output pins
 const int output_2 = 2;//4;   // built-in LED pin #
@@ -255,6 +257,24 @@ void Task2code (void * parameters) {
     }
 } 
 
+void LampTaskCode (void * parameters)
+{
+  for (;;)
+  {
+    int analogValue = analogRead(LIGHT_SENSOR_PIN);
+    if (analogValue < ANALOG_THRESHOLD)
+    {
+      digitalWrite(LED_PIN, LOW);
+    }
+    else
+    {
+      digitalWrite(LED_PIN, HIGH);
+      vTaskDelay(10000);
+    }
+    vTaskDelay(1000);
+  }
+}
+
 void showUpdate(char ip[], const char text[], const GFXfont* f) {
   const char header[25] = "Networks IV\n"; 
   //const char ip[25] = "IP: 10.100.50.20";
@@ -333,6 +353,7 @@ void setup()
   // Create thread for task 3
   //xTaskCreatePinnedToCore(TaskScreen, "Task3", 1000, NULL, 5, &Task3, 1);
   xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);  
+  xTaskCreatePinnedToCore(LampTaskCode, "Lamp Task", 1000, NULL, 5, &LampTask, 0);
 
   WiFi.mode(WIFI_STA);
   String hostname = "ESP32LF";
@@ -392,12 +413,13 @@ void loop()
   //int r = random();
   //char cstr[16];
   //client.publish(AWS_IOT_CHANNEL_5, itoa(r, cstr, 10));
-
+/*
   int analogValue = analogRead(LIGHT_SENSOR_PIN);
   if (analogValue < ANALOG_THRESHOLD)
     digitalWrite(LED_PIN, LOW);
   else
     digitalWrite(LED_PIN, HIGH);
+    */
 #if !defined(__AVR)
 
 #else
