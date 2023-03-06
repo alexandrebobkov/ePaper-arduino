@@ -23,6 +23,7 @@
 #include <Fonts/FreeMonoBold24pt7b.h>
 #include <GxIO/GxIO_SPI/GxIO_SPI.h>
 #include <GxIO/GxIO.h>
+#include <SD.h>
 //#include "GxIO.h"
 
 /*
@@ -245,7 +246,10 @@ void Task2code (void * parameters) {
           i++;
         }
         else
+        {
           i = 0;
+          vTaskResume(Task3);
+        }
       // Blinkpattern: 3 quick flashes, pause
       // Task runs forever unless paused/terminated from outside
       // vTaskDelay() to be used as opposed to Delay()
@@ -314,6 +318,13 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
     }
     n++;
   }
+
+  for (int i = 0; i < 68; i++)
+  {
+    //display.drawPixel(4*i, 240+sensor_values[i], GxEPD_RED);
+    //display.fillCircle(10+i*4, 380-sensor_values[i], 2, GxEPD_BLACK);
+    display.fillCircle(10+i*4, 380-(sensor_values[i]/30), 2, GxEPD_RED);
+  }
   display.drawRect(2, 232, 12+x-10, 12+y-240, GxEPD_RED);
   Serial.print("\nArray: ");
   Serial.println(n);
@@ -361,6 +372,13 @@ void Task3code (void * parameters) {
 } 
 
 
+
+// WeMos D1 esp8266: D8 as standard
+const int chipSelect = SS;
+ 
+void printDirectory(File dir, int numTabs);
+
+
 void setup()
 {
   Serial.begin(115200);
@@ -368,6 +386,54 @@ void setup()
   Serial.println("setup");
   display.init(115200); // enable diagnostic output on Serial
   Serial.println("setup done");
+
+  Serial.println("\n======================");
+  Serial.print("\nInitializing SD card...");
+ 
+  // we'll use the initialization code from the utility libraries
+  // since we're just testing if the card is working!
+  if (!SD.begin(chipSelect)) {
+    Serial.println("initialization failed. Things to check:");
+    Serial.println("* is a card inserted?");
+    Serial.println("* is your wiring correct?");
+    Serial.println("* did you change the chipSelect pin to match your shield or module?");
+    while (1);
+  } else {
+    Serial.println("Wiring is correct and a card is present.");
+  }
+ 
+  // print the type of card
+  Serial.println();
+  Serial.print("Card type:         ");
+  switch (SD.cardType()) {
+    case CARD_NONE:
+      Serial.println("NONE");
+      break;
+    case CARD_MMC:
+      Serial.println("MMC");
+      break;
+    case CARD_SD:
+      Serial.println("SD");
+      break;
+    case CARD_SDHC:
+      Serial.println("SDHC");
+      break;
+    default:
+      Serial.println("Unknown");
+  }
+  Serial.print("Card size:  ");
+  Serial.println((float)SD.cardSize()/(1024*1024));
+ 
+  Serial.print("Total bytes: ");
+  Serial.println(SD.totalBytes());
+ 
+  Serial.print("Used bytes: ");
+  Serial.println(SD.usedBytes());
+ 
+  File dir =  SD.open("/");
+  printDirectory(dir, 0);
+
+  Serial.println("\n======================");
 
   pinMode(LED_PIN, OUTPUT);
   //digitalWrite(LED_PIN, HIGH);
@@ -466,3 +532,31 @@ void loop()
   client.loop();
   delay(1000);
 }
+
+void printDirectory(File dir, int numTabs) {
+  while (true) {
+ 
+    File entry =  dir.openNextFile();
+    if (! entry) {
+      // no more files
+      break;
+    }
+    for (uint8_t i = 0; i < numTabs; i++) {
+      Serial.print('\t');
+    }
+    Serial.print(entry.name());
+    if (entry.isDirectory()) {
+      Serial.println("/");
+      printDirectory(entry, numTabs + 1);
+    } else {
+      // files have sizes, directories do not
+      Serial.print("\t\t");
+      Serial.print(entry.size(), DEC);
+      time_t lw = entry.getLastWrite();
+      struct tm * tmstruct = localtime(&lw);
+      Serial.printf("\tLAST WRITE: %d-%02d-%02d %02d:%02d:%02d\n", (tmstruct->tm_year) + 1900, (tmstruct->tm_mon) + 1, tmstruct->tm_mday, tmstruct->tm_hour, tmstruct->tm_min, tmstruct->tm_sec);
+    }
+    entry.close();
+  }
+}
+
