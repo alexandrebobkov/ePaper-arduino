@@ -374,8 +374,8 @@ void setup()
   Serial.print("\nCONNECTED\nIP: ");
   Serial.println(WiFi.localIP());
   // Update IP address for displaying.
-  String ip_addr = WiFi.localIP().toString();
-  ip_addr.toCharArray(info_ip_addr,ip_addr.length());
+  String lan_addr = WiFi.localIP().toString();
+  lan_addr.toCharArray(info_ip_addr, lan_addr.length()+1);
   // Call Task to display information on ePaper display.
   xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);
   //info_ip_addr[16] = "000.000.000.000";
