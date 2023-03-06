@@ -118,7 +118,7 @@ const int output_23 = 21;
 int sensor_val = 0;
 
 char aws_msg[25] = "";
-char info_ip_addr[16] = "010.100.050.000";
+char info_ip_addr[16] = "000.000.000.000";
 char display_msg[4][50] = {"", "", "", ""};
 
 WiFiClientSecure net = WiFiClientSecure();
@@ -299,6 +299,7 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   }
 
   display.drawRect(2,250,298,148, GxEPD_RED);
+  display.print("IP: ");
   display.println(ip);
   display.println(text);  
   display.println(message);
@@ -314,7 +315,9 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   //delay(5000);    
 }
 //void TaskScreen (void * parameters) {
-  void Task3code (void * parameters) {  
+
+// Display information on ePaper display.
+void Task3code (void * parameters) {  
   Serial.print("Task 3 running on core # ");
   Serial.println(xPortGetCoreID());
 
@@ -352,7 +355,8 @@ void setup()
   xTaskCreatePinnedToCore(Task2code, "Task2", 1000, NULL, 1, &Task2, 1);  
   // Create thread for task 3
   //xTaskCreatePinnedToCore(TaskScreen, "Task3", 1000, NULL, 5, &Task3, 1);
-  xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);  
+  // Display information on ePaper display.
+  //xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);  
   xTaskCreatePinnedToCore(LampTaskCode, "Lamp Task", 1000, NULL, 5, &LampTask, 0);
 
   WiFi.mode(WIFI_STA);
@@ -367,8 +371,13 @@ void setup()
     delay(500);
     Serial.print(".");
   }
-  Serial.print("\nIP: ");
-  //Serial.println(WiFi.localIP());
+  Serial.print("\nCONNECTED\nIP: ");
+  Serial.println(WiFi.localIP());
+  // Update IP address for displaying.
+  String ip_addr = WiFi.localIP().toString();
+  ip_addr.toCharArray(info_ip_addr,ip_addr.length());
+  // Call Task to display information on ePaper display.
+  xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);
   //info_ip_addr[16] = "000.000.000.000";
 
   // Configure WiFiClientSecure to use the AWS IoT device credentials
