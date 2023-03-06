@@ -114,6 +114,7 @@ const int output_2 = 2;//4;   // built-in LED pin #
 const int output_1 = 19;
 const int output_22 = 22;   // Pin 22
 const int output_23 = 21;
+int sensor_values[68];
 
 int sensor_val = 0;
 
@@ -234,8 +235,17 @@ void Task1code (void * parameters) {
 void Task2code (void * parameters) {  
   Serial.print("Task 2 running on core # ");
     Serial.println(xPortGetCoreID());
+    int i = 0;
 
-    for (;;) {
+    for (;;)
+    {
+      if ((i>=0) && (i<68))
+        {
+          sensor_values[i] = analogRead(LIGHT_SENSOR_PIN);
+          i++;
+        }
+        else
+          i = 0;
       // Blinkpattern: 3 quick flashes, pause
       // Task runs forever unless paused/terminated from outside
       // vTaskDelay() to be used as opposed to Delay()
@@ -251,6 +261,9 @@ void Task2code (void * parameters) {
       vTaskDelay(125);
       digitalWrite(output_2, LOW);
       vTaskDelay(1500); 
+      Serial.print("[");
+      Serial.print(i);
+      Serial.print("]; ");
       Serial.print("Sensor value: ");
       //client.publish(AWS_IOT_CHANNEL_5, "0");
       Serial.println(analogRead(LIGHT_SENSOR_PIN));  
@@ -259,6 +272,7 @@ void Task2code (void * parameters) {
 
 void LampTaskCode (void * parameters)
 {
+  //int i = 0;
   for (;;)
   {
     int analogValue = analogRead(LIGHT_SENSOR_PIN);
@@ -292,13 +306,28 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   display.println(header);
   //display.setTextColor(GxEPD_LIGHTGREY);
   int x, y;
-  for (x = 2; x <= 300; x+=4) {
+  int n = 0;
+  for (x = 10; x < 280; x+=4) {
+    for (y = 240; y < 380; y +=4) {
+      display.drawPixel(x, y, GxEPD_BLACK);      
+      //display.fillRect(x, y, x+2, y+2, GxEPD_BLACK);
+    }
+    n++;
+  }
+  display.drawRect(2, 232, 12+x-10, 12+y-240, GxEPD_RED);
+  Serial.print("\nArray: ");
+  Serial.println(n);
+  //display.fillRect(2, 232, x-10, y-240, GxEPD_RED);
+  //display.fillRect(2, 240, 4, 4, GxEPD_RED);
+  //display.drawRect(2, 240, 4, 4, GxEPD_RED);
+  //display.drawRect(2,240,x,y, GxEPD_RED);
+  /*for (x = 2; x <= 300; x+=4) {
     for (y=250; y <= 400; y +=4) {
       display.drawPixel(x, y, GxEPD_BLACK);
     }
-  }
+  }*/
 
-  display.drawRect(2,250,298,148, GxEPD_RED);
+  //display.drawRect(2,250,298,148, GxEPD_RED);
   display.print("IP: ");
   display.println(ip);
   display.println(text);  
