@@ -103,11 +103,12 @@ GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
 
 struct Data {
   const char* temp;
+  const int* v;
 };
 
 // Define tasks.
 TaskHandle_t Task1, Task2, Task3, Task4, Task5;   // For prototyping purposes these tasks control LEDs based on received command
-TaskHandle_t LampTask;
+TaskHandle_t LampTask, StorageCard;
 
 // Define output pins
 const int output_2 = 2;//4;   // built-in LED pin #
@@ -122,6 +123,8 @@ int sensor_val = 0;
 char aws_msg[25] = "";
 char info_ip_addr[16] = "000.000.000.000";
 char display_msg[4][50] = {"", "", "", ""};
+
+void printDirectory(File dir, int numTabs);
 
 WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
@@ -369,14 +372,19 @@ void Task3code (void * parameters) {
     showUpdate(info_ip_addr, aws_msg, &FreeMonoBold12pt7b);
     vTaskSuspend(NULL);
   } 
-} 
+}
+
+void StorageCardcode (void *parameters)
+{
+
+}
 
 
 
 // WeMos D1 esp8266: D8 as standard
 const int chipSelect = SS;
  
-void printDirectory(File dir, int numTabs);
+
 
 
 void setup()
@@ -453,6 +461,8 @@ void setup()
   // Display information on ePaper display.
   //xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);  
   xTaskCreatePinnedToCore(LampTaskCode, "Lamp Task", 1000, NULL, 5, &LampTask, 0);
+  xTaskCreatePinnedToCore(StorageCardcode, "Storage Card", 1000, NULL, 7, &LampTask, 1);
+  
 
   WiFi.mode(WIFI_STA);
   String hostname = "ESP32LF";
