@@ -101,6 +101,11 @@ GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
 //#define ANALOG_THRESHOLD 2050 // threshhold for analog input when logical 0 should become logical 1
 #define ANALOG_THRESHOLD 1800 // threshhold for analog input when logical 0 should become logical 1
 
+// RGB LED
+#define RGB_RED_PIN 11    // D14
+#define RGB_BLUE_PIN 13  // D13
+#define RGB_GREEN_PIN 12   // D12
+
 struct Data {
   const char* temp;
   const int* v;
@@ -240,12 +245,14 @@ void Task2code (void * parameters) {
   Serial.print("Task 2 running on core # ");
     Serial.println(xPortGetCoreID());
     int i = 0;
+    int c = 0, v = 10;
 
     for (;;)
     {
       if ((i>=0) && (i<68))
         {
           sensor_values[i] = analogRead(LIGHT_SENSOR_PIN);
+          //analogWrite(RGB_BLUE_PIN, (sensor_values[i]/4095)*200);
           i++;
         }
         else
@@ -268,12 +275,30 @@ void Task2code (void * parameters) {
       vTaskDelay(125);
       digitalWrite(output_2, LOW);
       vTaskDelay(1500); 
+
       Serial.print("[");
       Serial.print(i);
       Serial.print("]; ");
       Serial.print("Sensor value: ");
       //client.publish(AWS_IOT_CHANNEL_5, "0");
       Serial.println(analogRead(LIGHT_SENSOR_PIN));  
+
+      /*if (c > 0 && c < 255)
+      {
+        analogWrite(RGB_BLUE_PIN, c);
+        c += v;
+      }
+      if (c == 255)
+        v = -10;
+      if (c == 0)
+        v = 10;*/
+
+      /*for (int c = 0; c < 255; c++)
+      {
+        analogWrite(RGB_BLUE_PIN, c);
+        vTaskDelay(50);
+      }*/
+
     }
 } 
 
@@ -374,16 +399,8 @@ void Task3code (void * parameters) {
   } 
 }
 
-void StorageCardcode (void *parameters)
-{
-
-}
-
-
-
 // WeMos D1 esp8266: D8 as standard
-const int chipSelect = SS;
- 
+    const int chipSelect = SS;
 
 
 
@@ -429,8 +446,9 @@ void setup()
     default:
       Serial.println("Unknown");
   }
+
   Serial.print("Card size:  ");
-  Serial.println((float)SD.cardSize()/(1024*1024));
+  Serial.println((float)SD.cardSize()/1000);
  
   Serial.print("Total bytes: ");
   Serial.println(SD.totalBytes());
@@ -452,6 +470,27 @@ void setup()
   pinMode(output_22, OUTPUT);
   digitalWrite(output_22, HIGH);
 
+  // RGB
+  //pinMode(RGB_RED_PIN, OUTPUT);
+  //digitalWrite(RGB_RED_PIN, HIGH);
+
+  //pinMode(RGB_BLUE_PIN, OUTPUT);
+  ledcSetup(0, 5000, 8);
+  ledcAttachPin(RGB_BLUE_PIN, 0);
+  //ledcAttachPin(RGB_RED_PIN, 0);
+  //digitalWrite(RGB_BLUE_PIN, HIGH);
+  //analogWrite(RGB_BLUE_PIN, 255);
+
+  /*pinMode(RGB_BLUE_PIN, OUTPUT);
+  digitalWrite(RGB_BLUE_PIN, HIGH);*/
+ 
+  // print the type and size of the first FAT-type volume
+//  uint32_t volumesize;
+//  Serial.print("Volume type is:    FAT");
+//  Serial.println(SDFS.usefatType(), DEC);
+ 
+  
+
   // Create thread for task 1
   xTaskCreatePinnedToCore(Task1code, "Task1", 1000, NULL, 2, &Task1, 0);    
   // Create thread for task 2
@@ -461,7 +500,7 @@ void setup()
   // Display information on ePaper display.
   //xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);  
   xTaskCreatePinnedToCore(LampTaskCode, "Lamp Task", 1000, NULL, 5, &LampTask, 0);
-  xTaskCreatePinnedToCore(StorageCardcode, "Storage Card", 1000, NULL, 7, &LampTask, 1);
+  //xTaskCreatePinnedToCore(StorageCardcode, "Storage Card", 1000, NULL, 7, &StorageCard, 1);
   
 
   WiFi.mode(WIFI_STA);
@@ -540,6 +579,16 @@ void loop()
 
 #endif
   client.loop();
+  for (int d = 20; d <= 255; d++)
+  {
+    ledcWrite(0, d);
+    delay(25);
+  }
+  for (int d = 255; d >= 20; d--)
+  {
+    ledcWrite(0, d);
+    delay(25);
+  }
   delay(1000);
 }
 
