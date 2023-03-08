@@ -118,7 +118,7 @@ TaskHandle_t LampTask, StorageCard;
 // Define output pins
 const int output_2 = 2;//4;   // built-in LED pin #
 // output pins that will be used to control relay; for now they control LEDs
-const int output_1 = 19;
+const int output_1 = 22;//19;    // Pin 19 conflicts with ssd card module
 const int output_22 = 22;   // Pin 22
 const int output_23 = 21;
 int sensor_values[68];
@@ -276,12 +276,14 @@ void Task2code (void * parameters) {
       digitalWrite(output_2, LOW);
       vTaskDelay(1500); 
 
+      /*
       Serial.print("[");
       Serial.print(i);
       Serial.print("]; ");
       Serial.print("Sensor value: ");
       //client.publish(AWS_IOT_CHANNEL_5, "0");
       Serial.println(analogRead(LIGHT_SENSOR_PIN));  
+      */
 
       /*if (c > 0 && c < 255)
       {
@@ -412,6 +414,7 @@ void setup()
   display.init(115200); // enable diagnostic output on Serial
   Serial.println("setup done");
 
+  /*
   Serial.println("\n======================");
   Serial.print("\nInitializing SD card...");
  
@@ -460,6 +463,7 @@ void setup()
   printDirectory(dir, 0);
 
   Serial.println("\n======================");
+  */
 
   pinMode(LED_PIN, OUTPUT);
   //digitalWrite(LED_PIN, HIGH);
@@ -563,9 +567,11 @@ void setup()
 void loop()
 {
   // Publishes value to MQTT
-  //int r = random();
-  //char cstr[16];
-  //client.publish(AWS_IOT_CHANNEL_5, itoa(r, cstr, 10));
+  /*
+  int r = random();
+  char cstr[16];
+  client.publish(AWS_IOT_CHANNEL_5, itoa(r, cstr, 10));
+  */
 /*
   int analogValue = analogRead(LIGHT_SENSOR_PIN);
   if (analogValue < ANALOG_THRESHOLD)
