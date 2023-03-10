@@ -12,7 +12,7 @@
 #include <ArduinoJson.h>
 //#include "WiFi.h"
 #include <WiFi.h>
-#include <Wire.h> 
+//#include <Wire.h> 
 #include <GxEPD.h>
 #include <GxGDEW042Z15/GxGDEW042Z15.h>    // 4.2" b/w/r
 #include GxEPD_BitmapExamples
@@ -24,6 +24,9 @@
 #include <GxIO/GxIO_SPI/GxIO_SPI.h>
 #include <GxIO/GxIO.h>
 #include <SD.h>
+#include <SPI.h>
+//#include <Adafruit_GFX.h>
+#include <RTClib.h>
 //#include "GxIO.h"
 
 /*
@@ -114,6 +117,9 @@ struct Data {
 // Define tasks.
 TaskHandle_t Task1, Task2, Task3, Task4, Task5;   // For prototyping purposes these tasks control LEDs based on received command
 TaskHandle_t LampTask, StorageCard;
+
+RTC_DS3231 rtc;
+char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
 // Define output pins
 const int output_2 = 2;//4;   // built-in LED pin #
@@ -416,6 +422,20 @@ void setup()
   display.init(115200); // enable diagnostic output on Serial
   Serial.println("setup done");
 
+  if (! rtc.begin())
+  {
+    Serial.println("Couldn't find RTC");
+    while (1);
+  }
+  if (rtc.lostPower()) {
+    Serial.println("RTC lost power, lets set the time!");
+    // following line sets the RTC to the date &amp; time this sketch was compiled
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    // This line sets the RTC with an explicit date &amp; time, for example to set
+    // January 21, 2014 at 3am you would call:
+    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+  }
+
     
   Serial.println("\n======================");
   Serial.print("\nInitializing SD card...");
@@ -463,7 +483,7 @@ void setup()
  
   File dir =  SD.open("/");
   drawLogo(SD.open("/picture-001.bmp"));
-  delay(10000);
+  delay(5000);
   //printDirectory(dir, 0);
 
   Serial.println("\n======================");
@@ -570,12 +590,34 @@ void setup()
 
 void loop()
 {
-  // Publishes value to MQTT
-  
+  DateTime now = rtc.now();
+  Serial.print(now.year(), DEC);
+  Serial.print('/');
+  Serial.print(now.month(), DEC);
+  Serial.print('/');
+  Serial.print(now.day(), DEC);
+  Serial.print(" (");
+  Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
+  Serial.print(") ");
+  Serial.print(now.hour(), DEC);
+  Serial.print(':');
+  Serial.print(now.minute(), DEC);
+  Serial.print(':');
+  Serial.print(now.second(), DEC);
+  Serial.println();
+  Serial.print("Temperature: ");
+  Serial.println(rtc.getTemperature(), DEC);
+
+  // Publishes value to MQTT  
+  int temp = (float)rtc.getTemperature();
+  int min = now.minute();
   int r = random();
   int analogValue = analogRead(LIGHT_SENSOR_PIN);
   char cstr[16];
-  client.publish(AWS_IOT_CHANNEL_5, itoa(analogValue, cstr, 10));
+  client.publish(AWS_IOT_CHANNEL_5, itoa(min, cstr, 10));
+  client.publish(AWS_IOT_CHANNEL_5, itoa(temp, cstr, 10));
+
+  
   
 /*
   
