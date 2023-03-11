@@ -27,6 +27,7 @@
 #include <SPI.h>
 //#include <Adafruit_GFX.h>
 #include <RTClib.h>
+//#include <ErriezDS3231.h>
 //#include "GxIO.h"
 #include "mqtt.h"
 #include "automation.h"
@@ -73,6 +74,8 @@ struct Data {
 //TaskHandle_t LampTask, StorageCard;
 
 RTC_DS3231 rtc;
+//ErriezDS3231 rtc;
+
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
 /*// Define output pins
@@ -88,6 +91,7 @@ int sensor_val = 0;
 char aws_msg[25] = "";
 char info_ip_addr[16] = "000.000.000.000";
 char display_msg[4][50] = {"", "", "", ""};
+float temp = 0.0;
 
 void printDirectory(File dir, int numTabs);
 void drawLogo(File f);
@@ -290,7 +294,7 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   //const char ip[25] = "IP: 10.100.50.20";
   const char ip_addr[] = "121.21.10.20";
   //const char footer[] = "\nWireless\nAutomation Board\n\nControlled via Cloud";
-  const char footer[] = "\nAutomation Board";
+  const char footer[] = "\nSensors and Variables";
   const char message[] = "Command received:\nRelay 1 ON";
   //strcpy(ip, "10.100.50.16");
   
@@ -304,31 +308,17 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   int x, y;
   int n = 0;
   for (x = 10; x < 280; x+=4) {
-    for (y = 240; y < 380; y +=4) {
+    for (y = 240; y < 380; y +=4)
       display.drawPixel(x, y, GxEPD_BLACK);      
-      //display.fillRect(x, y, x+2, y+2, GxEPD_BLACK);
-    }
     n++;
   }
 
   for (int i = 0; i < 68; i++)
-  {
-    //display.drawPixel(4*i, 240+sensor_values[i], GxEPD_RED);
-    //display.fillCircle(10+i*4, 380-sensor_values[i], 2, GxEPD_BLACK);
     display.fillCircle(10+i*4, 380-(sensor_values[i]/30), 2, GxEPD_RED);
-  }
+
   display.drawRect(2, 232, 12+x-10, 12+y-240, GxEPD_RED);
   Serial.print("\nArray: ");
   Serial.println(n);
-  //display.fillRect(2, 232, x-10, y-240, GxEPD_RED);
-  //display.fillRect(2, 240, 4, 4, GxEPD_RED);
-  //display.drawRect(2, 240, 4, 4, GxEPD_RED);
-  //display.drawRect(2,240,x,y, GxEPD_RED);
-  /*for (x = 2; x <= 300; x+=4) {
-    for (y=250; y <= 400; y +=4) {
-      display.drawPixel(x, y, GxEPD_BLACK);
-    }
-  }*/
 
   //display.drawRect(2,250,298,148, GxEPD_RED);
   display.print("IP: ");
@@ -337,11 +327,19 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   display.println(message);
   display.setTextColor(GxEPD_RED);
   display.setFont(&FreeMonoBold9pt7b);
+  // Display sensors and variables
   display.println(footer);
+  display.setTextColor(GxEPD_BLACK);
+  // Display light sensor reading
   int v = analogRead(LIGHT_SENSOR_PIN);
   char cstr[16];
-  display.println(itoa(v, cstr, 10));
-  display.setTextColor(GxEPD_BLACK);
+  display.print(itoa(v, cstr, 10));
+  // Display temperature sensor reading
+  display.print("   ");
+  
+  char temp_cstr[16];
+  display.print(itoa(temp, temp_cstr, 10));
+  display.print("C");
   
   display.update();
   //delay(5000);    
@@ -376,6 +374,7 @@ void setup()
   display.init(115200); // enable diagnostic output on Serial
   Serial.println("setup done");
 
+  
   if (! rtc.begin())
   {
     Serial.println("Couldn't find RTC");
@@ -390,6 +389,7 @@ void setup()
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
   }
   rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  temp = rtc.getTemperature();
 
     
   Serial.println("\n======================");
@@ -562,7 +562,9 @@ void loop()
   Serial.print(now.second(), DEC);
   Serial.println();
   Serial.print("Temperature: ");
-  Serial.println(rtc.getTemperature(), DEC);
+  temp = rtc.getTemperature();
+  //Serial.println(rtc.getTemperature(), DEC);
+  Serial.println(temp, DEC);
 
   // Publishes value to MQTT  
   int temp = (float)rtc.getTemperature();
