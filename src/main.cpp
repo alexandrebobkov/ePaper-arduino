@@ -3,7 +3,7 @@
     
   ePaper embeded system program written in style adopted for learning.
   Adopted & written by: Alexander Bobkov
-  Feb 25, 2023
+  Mar 10, 2023
 */
 
 #include "secrets.h"
@@ -435,6 +435,7 @@ void setup()
     // January 21, 2014 at 3am you would call:
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
   }
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
     
   Serial.println("\n======================");
@@ -584,6 +585,7 @@ void setup()
   client.subscribe(AWS_IOT_CHANNEL_2);
   client.subscribe(AWS_IOT_CHANNEL_3);
   client.subscribe(AWS_IOT_CHANNEL_4);
+  client.subscribe(AWS_IOT_CHANNEL_5);
  
   Serial.println("AWS IoT Connected!");  
 }
