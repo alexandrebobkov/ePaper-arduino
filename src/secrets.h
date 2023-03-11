@@ -8,6 +8,7 @@ const char* WIFI_SSID = "IoT_bots";
 //const char WIFI_PASSWORD[] = "208208208";           //change this
 const char* WIFI_PASSWORD = "208208208";
 const char AWS_IOT_ENDPOINT[] = "a2a8jqp5bbl7pc-ats.iot.us-east-1.amazonaws.com";       //change this
+const char NODE_MQTT[]="10.100.50.16"; // port 1883
  
 // Amazon Root CA 1
 static const char AWS_CERT_CA[] PROGMEM = R"EOF(

@@ -97,7 +97,11 @@ void printDirectory(File dir, int numTabs);
 void drawLogo(File f);
 
 WiFiClientSecure net = WiFiClientSecure();
+// AWS IoT
 PubSubClient client(net);
+// Mosquitto
+PubSubClient mosquitto(net);
+
 
 // Section of code that processes JSON command(s) received from AWS IoT
 void messageHandler(char* topic, byte* payload, unsigned int length)
@@ -512,16 +516,14 @@ void setup()
   net.setCertificate(AWS_CERT_CRT);
   net.setPrivateKey(AWS_CERT_PRIVATE);
  
-  client.publish(AWS_IOT_CHANNEL_5, "10");
+  //client.publish(AWS_IOT_CHANNEL_5, "10");
   // Connect to the MQTT broker on the AWS endpoint we defined earlier
   client.setServer(AWS_IOT_ENDPOINT, 8883);
   //client.setServer(AWS_IOT_ENDPOINT, 443);
  
   // Create a message handler
   client.setCallback(messageHandler);
-
-  Serial.println("Connecting to AWS IoT");
- 
+  Serial.println("Connecting to AWS IoT"); 
   while (!client.connect(THINGNAME))
   {
     Serial.print(".");
@@ -532,16 +534,34 @@ void setup()
   {
     Serial.println("AWS IoT Timeout!");
     return;
-  }
- 
-  // Subscribe to a topic
+  } 
+  // AWS IoT Subscribe to a topic
   client.subscribe(AWS_IOT_CHANNEL_1);
   client.subscribe(AWS_IOT_CHANNEL_2);
   client.subscribe(AWS_IOT_CHANNEL_3);
   client.subscribe(AWS_IOT_CHANNEL_4);
-  client.subscribe(AWS_IOT_CHANNEL_5);
- 
-  Serial.println("AWS IoT Connected!");  
+  client.subscribe(AWS_IOT_CHANNEL_5); 
+  Serial.println("AWS IoT Connected!");
+
+  /*
+  // MOSQUITTO MQTT
+  Serial.println("Connecting to Mosquitto");
+  //mosquitto.publish(MQTT_IOT_CHANNEL_0, "HI");
+  mosquitto.setServer(NODE_MQTT, 1883);
+  while(!mosquitto.connect("Mosquitto"))
+  {
+    Serial.print(".");
+    delay(10);
+  }
+  if (!mosquitto.connected())
+  {
+    Serial.println("Mosquitto Timeout");
+    return;
+  }
+  mosquitto.subscribe(MQTT_IOT_CHANNEL_0);
+  Serial.println("Mosquitto Connected!");
+  */
+
 }
 
 void loop()
@@ -574,6 +594,9 @@ void loop()
   char cstr[16];
   client.publish(AWS_IOT_CHANNEL_5, itoa(min, cstr, 10));
   client.publish(AWS_IOT_CHANNEL_5, itoa(temp, cstr, 10));
+
+  // Mosquitto
+  mosquitto.publish(MQTT_IOT_CHANNEL_0, "10");
 
   
   
