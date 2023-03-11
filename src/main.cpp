@@ -28,38 +28,8 @@
 //#include <Adafruit_GFX.h>
 #include <RTClib.h>
 //#include "GxIO.h"
-
-/*
-#include "secrets.h"
-#include <Arduino.h>
-#include <Arduino_GFX_Library.h>
-// Adopted libraries
-//#include <GxGDEW042Z15.h>
-#include "GxGDEW042Z15.h"                 // ePaper WaveShare screen 4.2" b/w/r
-#include "GxIO.h"
-#include "GxIO_SPI.h"
-
-//#include <GxGDEW042Z15.h>                 // ePaper WaveShare screen 4.2" b/w/r
-//#include <GxIO.h>
-//#include <GxIO_SPI.h>
-
-#include <WiFiClientSecure.h>             // ESP32 library
-#include <PubSubClient.h>
-#include <ArduinoJson.h>
-//#include "WiFi.h"
-#include <WiFi.h>
-#include <Wire.h> 
-#include <GxEPD.h>
-//#include <GxGDEW042Z15/GxGDEW042Z15.h>    // 4.2" b/w/r
-#include GxEPD_BitmapExamples
-// FreeFonts from Adafruit_GFX
-#include <Fonts/FreeMonoBold9pt7b.h>
-#include <Fonts/FreeMonoBold12pt7b.h>
-#include <Fonts/FreeMonoBold18pt7b.h>
-#include <Fonts/FreeMonoBold24pt7b.h>
-//#include <GxIO/GxIO_SPI/GxIO_SPI.h>
-//#include <GxIO/GxIO.h>
-*/
+#include "mqtt.h"
+#include "automation.h"
 
 #if defined(ESP8266)
 GxIO_Class io(SPI, /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2); // arbitrary selection of D3(=0), D4(=2), selected for default of GxEPD_Class
@@ -93,40 +63,24 @@ GxIO_Class io(SPI, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9); // arbitrary selection of
 GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
 #endif
 
-#define AWS_IOT_CHANNEL_1 "iot/ch1"
-#define AWS_IOT_CHANNEL_2 "iot/ch2"
-#define AWS_IOT_CHANNEL_3 "iot/ch3"
-#define AWS_IOT_CHANNEL_4 "iot/ch4"
-#define AWS_IOT_CHANNEL_5 "iot/ch5"
-
-#define LIGHT_SENSOR_PIN 34   // analog in pin # for a light sensor
-#define LED_PIN 32            // pin # of LED controlled by light sensor
-//#define ANALOG_THRESHOLD 2050 // threshhold for analog input when logical 0 should become logical 1
-#define ANALOG_THRESHOLD 1800 // threshhold for analog input when logical 0 should become logical 1
-
-// RGB LED
-#define RGB_RED_PIN 11    // D14
-#define RGB_BLUE_PIN 13  // D13
-#define RGB_GREEN_PIN 12   // D12
-
 struct Data {
   const char* temp;
   const int* v;
 };
 
 // Define tasks.
-TaskHandle_t Task1, Task2, Task3, Task4, Task5;   // For prototyping purposes these tasks control LEDs based on received command
-TaskHandle_t LampTask, StorageCard;
+//TaskHandle_t Task1, Task2, Task3, Task4, Task5;   // For prototyping purposes these tasks control LEDs based on received command
+//TaskHandle_t LampTask, StorageCard;
 
 RTC_DS3231 rtc;
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
-// Define output pins
+/*// Define output pins
 const int output_2 = 2;//4;   // built-in LED pin #
 // output pins that will be used to control relay; for now they control LEDs
 const int output_1 = 22;//19;    // Pin 19 conflicts with ssd card module
 const int output_22 = 22;   // Pin 22
-const int output_23 = 21;
+const int output_23 = 21;*/
 int sensor_values[68];
 
 int sensor_val = 0;
