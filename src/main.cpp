@@ -643,8 +643,10 @@ void loop()
   // Mosquitto
   mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "10");
+  Serial.println("test_topic: 10");
   delay(1000);
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "3");
+  Serial.println("test_topic: 3");
 
   
   
