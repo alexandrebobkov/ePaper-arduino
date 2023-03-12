@@ -3,7 +3,7 @@
     
   ePaper embeded system program written in style adopted for learning.
   Adopted & written by: Alexander Bobkov
-  Mar 10, 2023
+  Mar 11, 2023
 */
 
 #include "secrets.h"
@@ -414,7 +414,7 @@ void reconnect()
     if (mosquitto.connect("ESP32Client"))
     {
       Serial.println("connected");
-      client.subscribe("esp32/output");
+      mosquitto.subscribe("esp32/output");
     }
   }
 }
@@ -600,23 +600,11 @@ void setup()
   mosquitto.setCallback(mosquito_callback);
   if(mosquitto.connect("ESP32")) {
     Serial.println("Mosquitto Connected!");
+    mosquitto.subscribe("esp32/output");
     mosquitto.setCallback(mosquito_callback);
   }
   else
     Serial.println(mosquitto.state());
-  //mosquitto.setCallback(callback);
-  /*while(!mosquitto.connect("Mosquitto"))
-  {
-    Serial.print(".");
-    delay(10);
-  }
-  if (!mosquitto.connected())
-  {
-    Serial.println("Mosquitto Timeout");
-    return;
-  }
-  mosquitto.subscribe(MQTT_IOT_CHANNEL_0);
-  Serial.println("Mosquitto Connected!");*/
 }
 
 
@@ -673,6 +661,7 @@ void loop()
 
 #endif
   client.loop();
+  mosquitto.loop();
   for (int d = 20; d <= 255; d++)
   {
     ledcWrite(0, d);

@@ -8,3 +8,4 @@
 // MQTT Mosquitto
 #define MQTT_IOT_CHANNEL_0 "test_topic"
 #define MQTT_IOT_CHANNEL_1 "esp32/sensors/temp"
+#define MQQT_IOT_CHANNEL_9 "esp32/output"
