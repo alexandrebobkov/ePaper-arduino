@@ -8,5 +8,9 @@
 			"path": "../../pico"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"*.x": "cpp"
+		}
+	}
 }

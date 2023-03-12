@@ -34,6 +34,7 @@
 #include "automation.h"
 #include "automation-0.h"
 #include "dashboard-0.h"
+#include "dashboard.h"
 
 
 
