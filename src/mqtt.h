@@ -1,3 +1,8 @@
+#ifndef MQTT_H
+#define MQTT_H
+
+#include <SD.h>
+
 // AWS IoT MQTT channels
 #define AWS_IOT_CHANNEL_1 "iot/ch1"
 #define AWS_IOT_CHANNEL_2 "iot/ch2"
@@ -9,3 +14,11 @@
 #define MQTT_IOT_CHANNEL_0 "test_topic"
 #define MQTT_IOT_CHANNEL_1 "esp32/sensors/temp"
 #define MQQT_IOT_CHANNEL_9 "esp32/output"
+
+class mqtt
+{
+    public:
+        void mosquito_callback (char* topic, byte* message, unsigned int length);
+};
+
+#endif
