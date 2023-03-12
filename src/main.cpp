@@ -7,6 +7,7 @@
 */
 
 #include "secrets.h"
+#include <WiFi.h>
 #include <WiFiClientSecure.h>             // ESP32 library
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
@@ -95,12 +96,16 @@ float temp = 0.0;
 
 void printDirectory(File dir, int numTabs);
 void drawLogo(File f);
+//void mosquito_callback();
+//void reconnect();
 
+//AWSIoT
 WiFiClientSecure net = WiFiClientSecure();
-// AWS IoT
 PubSubClient client(net);
+
 // Mosquitto
-PubSubClient mosquitto(net);
+WiFiClient espClient;
+PubSubClient mosquitto(espClient);
 
 
 // Section of code that processes JSON command(s) received from AWS IoT
@@ -368,7 +373,51 @@ void Task3code (void * parameters) {
 // WeMos D1 esp8266: D8 as standard
     const int chipSelect = SS;
 
+void mosquito_callback (char* topic, byte* message, unsigned int length)
+{
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
+  Serial.print(". Message: ");
+  String messageTemp;
 
+  for (int i=0; i < length; i++)
+  {
+    Serial.print((char)message[i]);
+    messageTemp += (char)message[i];
+  }
+  Serial.println();
+
+  if (String(topic) == "esp32/output")
+  {
+    Serial.print("Changing output to ");
+    if (messageTemp == "on")
+    {
+      Serial.println("on");
+    }
+    else if (messageTemp == "off")
+    {
+      Serial.println("off");
+    }
+  }
+}
+
+void setupMQTT() {
+  mosquitto.setServer(mqtt_server, 1883);
+  // set the callback function
+  mosquitto.setCallback(mosquito_callback);
+}
+
+void reconnect()
+{
+  while (!mosquitto.connected())
+  {
+    if (mosquitto.connect("ESP32Client"))
+    {
+      Serial.println("connected");
+      client.subscribe("esp32/output");
+    }
+  }
+}
 
 void setup()
 {
@@ -543,12 +592,20 @@ void setup()
   client.subscribe(AWS_IOT_CHANNEL_5); 
   Serial.println("AWS IoT Connected!");
 
-  /*
+  /**/
   // MOSQUITTO MQTT
   Serial.println("Connecting to Mosquitto");
   //mosquitto.publish(MQTT_IOT_CHANNEL_0, "HI");
-  mosquitto.setServer(NODE_MQTT, 1883);
-  while(!mosquitto.connect("Mosquitto"))
+  mosquitto.setServer(mqtt_server, 1883);
+  mosquitto.setCallback(mosquito_callback);
+  if(mosquitto.connect("ESP32")) {
+    Serial.println("Mosquitto Connected!");
+    mosquitto.setCallback(mosquito_callback);
+  }
+  else
+    Serial.println(mosquitto.state());
+  //mosquitto.setCallback(callback);
+  /*while(!mosquitto.connect("Mosquitto"))
   {
     Serial.print(".");
     delay(10);
@@ -559,10 +616,10 @@ void setup()
     return;
   }
   mosquitto.subscribe(MQTT_IOT_CHANNEL_0);
-  Serial.println("Mosquitto Connected!");
-  */
-
+  Serial.println("Mosquitto Connected!");*/
 }
+
+
 
 void loop()
 {
@@ -596,7 +653,10 @@ void loop()
   client.publish(AWS_IOT_CHANNEL_5, itoa(temp, cstr, 10));
 
   // Mosquitto
+  mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "10");
+  delay(1000);
+  mosquitto.publish(MQTT_IOT_CHANNEL_0, "3");
 
   
   
