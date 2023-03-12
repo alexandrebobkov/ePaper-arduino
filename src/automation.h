@@ -34,22 +34,18 @@ void mqtt_message_handler (char* topic, byte* message, unsigned int length)
   Serial.print(". Message: ");
   String messageTemp;
 
-  for (int i=0; i < length; i++)
-  {
+  for (int i=0; i < length; i++) {
     Serial.print((char)message[i]);
     messageTemp += (char)message[i];
   }
   Serial.println();
 
-  if (String(topic) == "esp32/output")
-  {
+  if (String(topic) == "esp32/output") {
     Serial.print("Changing output to ");
-    if (messageTemp == "on")
-    {
+    if (messageTemp == "on") {
       Serial.println("on\n");
     }
-    else if (messageTemp == "off")
-    {
+    else if (messageTemp == "off") {
       Serial.println("off\n");
     }
   }
