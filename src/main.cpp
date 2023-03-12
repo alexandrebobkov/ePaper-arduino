@@ -375,7 +375,7 @@ void Task3code (void * parameters) {
 
 void mosquito_callback (char* topic, byte* message, unsigned int length)
 {
-  Serial.print("Message arrived on topic: ");
+  Serial.print("\nMessage arrived on topic: ");
   Serial.print(topic);
   Serial.print(". Message: ");
   String messageTemp;
@@ -392,11 +392,11 @@ void mosquito_callback (char* topic, byte* message, unsigned int length)
     Serial.print("Changing output to ");
     if (messageTemp == "on")
     {
-      Serial.println("on");
+      Serial.println("on\n");
     }
     else if (messageTemp == "off")
     {
-      Serial.println("off");
+      Serial.println("off\n");
     }
   }
 }
