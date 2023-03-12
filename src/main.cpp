@@ -218,33 +218,7 @@ void Task2code (void * parameters) {
       digitalWrite(output_2, HIGH);
       vTaskDelay(125);
       digitalWrite(output_2, LOW);
-      vTaskDelay(1500); 
-
-      /*
-      Serial.print("[");
-      Serial.print(i);
-      Serial.print("]; ");
-      Serial.print("Sensor value: ");
-      //client.publish(AWS_IOT_CHANNEL_5, "0");
-      Serial.println(analogRead(LIGHT_SENSOR_PIN));  
-      */
-
-      /*if (c > 0 && c < 255)
-      {
-        analogWrite(RGB_BLUE_PIN, c);
-        c += v;
-      }
-      if (c == 255)
-        v = -10;
-      if (c == 0)
-        v = 10;*/
-
-      /*for (int c = 0; c < 255; c++)
-      {
-        analogWrite(RGB_BLUE_PIN, c);
-        vTaskDelay(50);
-      }*/
-
+      vTaskDelay(1500);
     }
 } 
 
@@ -278,6 +252,7 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   //display.updateWindow(70,20,300,400,false);
   display.fillScreen(GxEPD_WHITE);
   display.setTextColor(GxEPD_BLACK);
+  display.setTextColor(GxEPD_DARKGREY); //
   display.setFont(f);
   display.setCursor(80, 20);
   display.println(header);
@@ -321,7 +296,6 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   display.update();
   //delay(5000);    
 }
-//void TaskScreen (void * parameters) {
 
 // Display information on ePaper display.
 void Task3code (void * parameters) {  
@@ -394,6 +368,8 @@ void setup()
   Serial.println("setup");
   display.init(115200); // enable diagnostic output on Serial
   Serial.println("setup done");
+
+  
 
   
   if (! rtc.begin())
