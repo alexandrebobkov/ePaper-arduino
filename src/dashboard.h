@@ -16,11 +16,12 @@
 
 class Dashboard {
     private:
-        uint16_t read16(File& f);
-        uint32_t read32(File& f);
         static const uint16_t input_buffer_pixels = 800; // may affect performance
         static const uint16_t max_row_width = 1448; // for up to 6" display 1448x1072
         static const uint16_t max_palette_pixels = 256; // for depth <= 8
+
+        uint16_t read16(File& f);
+        uint32_t read32(File& f);        
         uint8_t input_buffer[3 * input_buffer_pixels]; // up to depth 24
         uint8_t output_row_mono_buffer[max_row_width / 8]; // buffer for at least one row of b/w bits
         uint8_t output_row_color_buffer[max_row_width / 8]; // buffer for at least one row of color bits

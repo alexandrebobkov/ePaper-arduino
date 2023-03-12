@@ -274,7 +274,6 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   //const char footer[] = "\nWireless\nAutomation Board\n\nControlled via Cloud";
   const char footer[] = "\nSensors and Variables";
   const char message[] = "Command received:\nRelay 1 ON";
-  //strcpy(ip, "10.100.50.16");
   
   //display.updateWindow(70,20,300,400,false);
   display.fillScreen(GxEPD_WHITE);
@@ -581,6 +580,8 @@ void setup()
 void loop()
 {
   DateTime now = rtc.now();
+  String date = now.timestamp();
+  Serial.println(date);
   Serial.print(now.year(), DEC);
   Serial.print('/');
   Serial.print(now.month(), DEC);
