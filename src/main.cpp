@@ -337,12 +337,12 @@ void mosquito_callback (char* topic, byte* message, unsigned int length)
     if (messageTemp == "on")
     {
       Serial.println("Turn switch ON!\n");
-      digitalWrite(SWITCH_1, HIGH);
+      digitalWrite(SWITCH_1, LOW);    // Active level LOW
     }
     else if (messageTemp == "off")
     {
       Serial.println("Turn switch OFF!\n");
-      digitalWrite(SWITCH_1, LOW);
+      digitalWrite(SWITCH_1, HIGH);
     }
   }
 }
