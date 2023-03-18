@@ -333,14 +333,16 @@ void mosquito_callback (char* topic, byte* message, unsigned int length)
 
   if (String(topic) == "esp32/output")
   {
-    Serial.print("Changing output to ");
+    Serial.print("Main. Changing output to: ");
     if (messageTemp == "on")
     {
-      Serial.println("on\n");
+      Serial.println("Turn switch ON!\n");
+      digitalWrite(SWITCH_1, HIGH);
     }
     else if (messageTemp == "off")
     {
-      Serial.println("off\n");
+      Serial.println("Turn switch OFF!\n");
+      digitalWrite(SWITCH_1, LOW);
     }
   }
 }
@@ -449,9 +451,10 @@ void setup()
   
 
   // Define switches pins
-  pinMode(SWITCH_1, OUTPUT);    // pin # 6
-  pinMode(SWITCH_2, OUTPUT);    // pin # 7
-  digitalWrite(SWITCH_2, LOW);
+  pinMode(SWITCH_1, OUTPUT);
+  pinMode(SWITCH_2, OUTPUT); 
+  digitalWrite(SWITCH_1, HIGH);
+  digitalWrite(SWITCH_2, HIGH);
 
   pinMode(LED_PIN, OUTPUT);
   //digitalWrite(LED_PIN, HIGH);

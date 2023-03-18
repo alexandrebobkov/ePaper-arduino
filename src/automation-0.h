@@ -13,8 +13,10 @@
 #define RGB_B_PIN 13  // D13
 #define RGB_G_PIN 12  // D12
 
-#define SWITCH_1 6
-#define SWITCH_2 7
+#define SWITCH_1 33   // GPIO 33; PHYSICAL PIN # 3
+#define SWITCH_2 27   // GPIO 27; PHYSICAL PIN # 10
+//#define SWITCH_1 7  PIN 7 SAUSES STALLS
+
 
 // Define tasks.
 TaskHandle_t Task0;     // Dummy built-in LED blink cycle
@@ -46,12 +48,14 @@ void mqtt_message_handler (char* topic, byte* message, unsigned int length)
   Serial.println();
 
   if (String(topic) == "esp32/output") {
-    Serial.print("Changing output to ");
+    Serial.print("Automation. Changing output to ");
     if (messageTemp == "on") {
       Serial.println("on\n");
+      //digitalWrite(SWITCH_2, HIGH);
     }
     else if (messageTemp == "off") {
       Serial.println("off\n");
+      //digitalWrite(SWITCH_2, LOW);
     }
   }
 }
