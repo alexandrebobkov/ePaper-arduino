@@ -6,6 +6,13 @@
 		{
 			"name": "pico",
 			"path": "../../pico"
+		},
+		{
+			"path": "../esp32-bootstraps"
+		},
+		{
+			"name": "ESP32-Bootstrap",
+			"path": "../esp32-bootstrap/ESP32-Bootstrap"
 		}
 	],
 	"settings": {
