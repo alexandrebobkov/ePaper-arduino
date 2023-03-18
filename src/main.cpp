@@ -371,13 +371,15 @@ void setup()
   Serial.println("setup done");
 
   
-
+  rtc.begin();
   
   if (! rtc.begin())
   {
     Serial.println("Couldn't find RTC");
     while (1);
   }
+  
+  //setSyncProvider(syncProvider);
   if (rtc.lostPower()) {
     Serial.println("RTC lost power, lets set the time!");
     // following line sets the RTC to the date &amp; time this sketch was compiled
