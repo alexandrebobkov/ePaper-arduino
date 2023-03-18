@@ -448,6 +448,11 @@ void setup()
   Serial.println("\n======================");
   
 
+  // Define switches pins
+  pinMode(SWITCH_1, OUTPUT);    // pin # 6
+  pinMode(SWITCH_2, OUTPUT);    // pin # 7
+  digitalWrite(SWITCH_2, LOW);
+
   pinMode(LED_PIN, OUTPUT);
   //digitalWrite(LED_PIN, HIGH);
   pinMode(output_1, OUTPUT);

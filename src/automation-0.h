@@ -13,6 +13,9 @@
 #define RGB_B_PIN 13  // D13
 #define RGB_G_PIN 12  // D12
 
+#define SWITCH_1 6
+#define SWITCH_2 7
+
 // Define tasks.
 TaskHandle_t Task0;     // Dummy built-in LED blink cycle
 TaskHandle_t TaskWiFi;  // Task maintaining wireless connection
