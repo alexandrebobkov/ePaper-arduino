@@ -12,7 +12,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 //#include "WiFi.h"
-#include <WiFi.h>
+//#include <WiFi.h>
 //#include <Wire.h> 
 //#include <GxEPD.h>
 //#include <GxGDEW042Z15/GxGDEW042Z15.h>    // 4.2" b/w/r
@@ -28,6 +28,7 @@
 #include <SPI.h>
 //#include <Adafruit_GFX.h>
 #include <RTClib.h>
+//#include <Timelib.h>
 //#include <ErriezDS3231.h>
 //#include "GxIO.h"
 #include "mqtt.h"
@@ -379,6 +380,8 @@ void setup()
     while (1);
   }
   
+  /*
+  if (!rtc.IsDateTimeValid())
   //setSyncProvider(syncProvider);
   if (rtc.lostPower()) {
     Serial.println("RTC lost power, lets set the time!");
@@ -388,7 +391,8 @@ void setup()
     // January 21, 2014 at 3am you would call:
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
   }
-  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  */
   temp = rtc.getTemperature();
 
     
