@@ -382,25 +382,23 @@ void setup()
     while (1);
   }
   
-  /*
-  if (!rtc.IsDateTimeValid())
-  //setSyncProvider(syncProvider);
-  if (rtc.lostPower()) {
+  
+  // Uncomment when compiling for the first time
+  //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  /*if (rtc.lostPower()) {
     Serial.println("RTC lost power, lets set the time!");
     // following line sets the RTC to the date &amp; time this sketch was compiled
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     // This line sets the RTC with an explicit date &amp; time, for example to set
     // January 21, 2014 at 3am you would call:
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
-  }
-  //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  */
+  }*/
+  
   temp = rtc.getTemperature();
 
-    
+  
   Serial.println("\n======================");
-  Serial.print("\nInitializing SD card...");
- 
+  Serial.print("\nInitializing SD card..."); 
   // we'll use the initialization code from the utility libraries
   // since we're just testing if the card is working!
   if (!SD.begin(chipSelect)) {
@@ -411,8 +409,7 @@ void setup()
     while (1);
   } else {
     Serial.println("Wiring is correct and a card is present.");
-  }
- 
+  } 
   // print the type of card
   Serial.println();
   Serial.print("Card type:         ");
@@ -432,21 +429,15 @@ void setup()
     default:
       Serial.println("Unknown");
   }
-
   Serial.print("Card size:  ");
-  Serial.println((float)SD.cardSize()/1000);
- 
+  Serial.println((float)SD.cardSize()/1000); 
   Serial.print("Total bytes: ");
-  Serial.println(SD.totalBytes());
- 
+  Serial.println(SD.totalBytes()); 
   Serial.print("Used bytes: ");
-  Serial.println(SD.usedBytes());
- 
+  Serial.println(SD.usedBytes()); 
   File dir =  SD.open("/");
   drawLogo(SD.open("/picture-001.bmp"));
   delay(5000);
-  //printDirectory(dir, 0);
-
   Serial.println("\n======================");
   
 
