@@ -314,6 +314,29 @@ void Task3code (void * parameters) {
   } 
 }
 
+// Task for handling wireless connection
+void TaskConnection (void * parameters) {
+  for (;;) {
+    WiFi.mode(WIFI_STA);
+    String hostname = "ESP32LF";
+    WiFi.setHostname(hostname.c_str());
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  
+    Serial.println("Connecting to Wi-Fi ...");
+  
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+    }
+    Serial.print("\nCONNECTED\nIP: ");
+    Serial.println(WiFi.localIP());
+    // Update IP address for displaying.
+    String lan_addr = WiFi.localIP().toString();
+    lan_addr.toCharArray(info_ip_addr, lan_addr.length()+1);
+    vTaskSuspend(NULL);
+  }
+}
+
 // WeMos D1 esp8266: D8 as standard
     const int chipSelect = SS;
 
@@ -394,7 +417,6 @@ void setup()
   }*/
   
   temp = rtc.getTemperature();
-
   
   Serial.println("\n======================");
   Serial.print("\nInitializing SD card..."); 
@@ -441,18 +463,18 @@ void setup()
   
 
   // Define switches pins
-  pinMode(SWITCH_1, OUTPUT);
-  pinMode(SWITCH_2, OUTPUT); 
-  digitalWrite(SWITCH_1, HIGH);
-  digitalWrite(SWITCH_2, HIGH);
+  pinMode(SWITCH_1,   OUTPUT);
+  pinMode(SWITCH_2,   OUTPUT); 
+  pinMode(LED_PIN,    OUTPUT);
+  pinMode(output_1,   OUTPUT);
+  pinMode(output_2,   OUTPUT);
+  pinMode(output_22,  OUTPUT);
 
-  pinMode(LED_PIN, OUTPUT);
-  //digitalWrite(LED_PIN, HIGH);
-  pinMode(output_1, OUTPUT);
-  digitalWrite(output_1, HIGH);
-  pinMode(output_2, OUTPUT);
-  digitalWrite(output_2, HIGH);
-  pinMode(output_22, OUTPUT);
+  digitalWrite(SWITCH_1,  HIGH);
+  digitalWrite(SWITCH_2,  HIGH); 
+  //digitalWrite(LED_PIN, HIGH);  
+  digitalWrite(output_1,  HIGH);  
+  digitalWrite(output_2,  HIGH);  
   digitalWrite(output_22, HIGH);
 
   // RGB
@@ -486,6 +508,8 @@ void setup()
   //xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);  
   xTaskCreatePinnedToCore(LampTaskCode, "Lamp Task", 1000, NULL, 5, &LampTask, 0);
   //xTaskCreatePinnedToCore(StorageCardcode, "Storage Card", 1000, NULL, 7, &StorageCard, 1);
+
+  //xTaskCreatePinnedToCore(TaskConnection, "Connection", 1000, NULL, 3, &Connection, 1);
   
 
   WiFi.mode(WIFI_STA);
@@ -505,6 +529,7 @@ void setup()
   // Update IP address for displaying.
   String lan_addr = WiFi.localIP().toString();
   lan_addr.toCharArray(info_ip_addr, lan_addr.length()+1);
+
   // Call Task to display information on ePaper display.
   xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);
   //info_ip_addr[16] = "000.000.000.000";

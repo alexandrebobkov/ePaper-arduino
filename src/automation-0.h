@@ -24,7 +24,7 @@
 TaskHandle_t Task0;     // Dummy built-in LED blink cycle
 TaskHandle_t TaskWiFi;  // Task maintaining wireless connection
 TaskHandle_t Task1, Task2, Task3, Task4, Task5;   // For prototyping purposes these tasks control LEDs based on received command
-TaskHandle_t LampTask, StorageCard;
+TaskHandle_t LampTask, StorageCard, Connection;
 
 WiFiClientSecure wifi_conn = WiFiClientSecure();
 
