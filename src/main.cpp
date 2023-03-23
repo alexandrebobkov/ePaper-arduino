@@ -28,6 +28,9 @@
 #include <SPI.h>
 //#include <Adafruit_GFX.h>
 #include <RTClib.h>
+#include <Adafruit_BMP280.h>
+//#include <Adafruit_Sensor.h>
+#include <Wire.h>
 //#include <Timelib.h>
 //#include <ErriezDS3231.h>
 //#include "GxIO.h"
@@ -36,6 +39,14 @@
 #include "automation-0.h"
 #include "dashboard-0.h"
 #include "dashboard.h"
+
+#define BMP280_I2C_ADDRESS  0x76
+#define BMP_SCK (13)
+#define BMP_MISO (12)
+#define BMP_MOSI (11)
+#define BMP_CS (10)
+#define BMP_SDA (21)
+#define BMP_SCL (22)
 
 
 
@@ -49,6 +60,7 @@ struct Data {
 //TaskHandle_t LampTask, StorageCard;
 
 RTC_DS3231 rtc;
+Adafruit_BMP280 bme;//(BMP_CS);
 //ErriezDS3231 rtc;
 
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
@@ -369,11 +381,34 @@ void setup()
 {
   Serial.begin(115200);
   Serial.println();
-  Serial.println("setup");
+  Serial.println("setup");  
   display.init(115200); // enable diagnostic output on Serial
   Serial.println("setup done");
 
-  
+  /*Serial.print("\nI2C Scanner");
+  int nDev;
+  byte error, address;
+  Serial.println("Scanning ...");
+  nDev = 0;
+  for (address = 1; address < 127; address++) {
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+    if (error == 0) {
+      Serial.print("I2C device found at address 0x");
+      if (address < 16) {
+        Serial.print("0");
+      }
+      Serial.println(address, HEX);
+      nDev++;
+    }
+  }*/
+
+  //bme.reset();
+  Serial.print("Temperature: ");
+  if (bme.begin(0x76)) { // 0x76 0x77    
+    Serial.println(bme.readTemperature());
+  }
+
   rtc.begin();
   
   if (! rtc.begin())

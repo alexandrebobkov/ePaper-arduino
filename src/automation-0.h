@@ -18,6 +18,8 @@
 //#define SWITCH_1 7  PIN 7 SAUSES STALLS
 
 
+
+
 // Define tasks.
 TaskHandle_t Task0;     // Dummy built-in LED blink cycle
 TaskHandle_t TaskWiFi;  // Task maintaining wireless connection

@@ -4,10 +4,6 @@
 			"path": "."
 		},
 		{
-			"name": "pico",
-			"path": "../../pico"
-		},
-		{
 			"path": "../esp32-bootstraps"
 		},
 		{
