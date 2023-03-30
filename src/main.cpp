@@ -28,6 +28,9 @@
 #include <SPI.h>
 //#include <Adafruit_GFX.h>
 #include <RTClib.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+#include <Adafruit_BMP280.h>
 //#include <Timelib.h>
 //#include <ErriezDS3231.h>
 //#include "GxIO.h"
@@ -49,6 +52,10 @@ struct Data {
 //TaskHandle_t LampTask, StorageCard;
 
 RTC_DS3231 rtc;
+Adafruit_BME280 bme;
+Adafruit_BMP280 bmp;
+#define BME280_ADDRESS (0X76)
+#define SEALEVELPRESSURE_HPA (1013.25)
 //ErriezDS3231 rtc;
 
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
@@ -67,6 +74,7 @@ char aws_msg[25] = "";
 char info_ip_addr[16] = "000.000.000.000";
 char display_msg[4][50] = {"", "", "", ""};
 float temp = 0.0;
+float humidity = 0.0;
 
 void printDirectory(File dir, int numTabs);
 //void drawLogo(File f);
@@ -289,11 +297,16 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   char cstr[16];
   display.print(itoa(v, cstr, 10));
   // Display temperature sensor reading
-  display.print("   ");
-  
+  display.print("   ");  
   char temp_cstr[16];
   display.print(itoa(temp, temp_cstr, 10));
   display.print("C");
+
+  // Display humidity sensor reading
+  display.print("   ");  
+  char humidity_cstr[16];
+  display.print(itoa(humidity, humidity_cstr, 10));
+  display.print("%");
   
   display.update();
   //delay(5000);    
@@ -395,6 +408,17 @@ void setup()
   Serial.println("setup");  
   display.init(115200); // enable diagnostic output on Serial
   Serial.println("setup done");
+
+  unsigned status = bme.begin();//0x76); 
+  if (!status) {
+    Serial.println("Could not find a valid BME280 sensor, check wiring!");
+    Serial.print("SensorID was: 0x"); Serial.println(bme.sensorID(),16);
+    Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
+    Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
+    Serial.print("        ID of 0x60 represents a BME 280.\n");
+    Serial.print("        ID of 0x61 represents a BME 680.\n");
+    while (1);
+  }
 
   rtc.begin();
   
@@ -606,6 +630,16 @@ void loop()
   temp = rtc.getTemperature();
   //Serial.println(rtc.getTemperature(), DEC);
   Serial.println(temp, DEC);
+
+  Serial.println("\n=================");
+  Serial.print("Temperature = ");
+  Serial.println(bme.readTemperature());
+  humidity = bme.readHumidity();
+  Serial.print("Humidity = ");
+  Serial.println(bme.readHumidity());
+  Serial.print("Pressure = ");
+  Serial.print(bme.readPressure() / 100.0F);
+  Serial.println(" hPa");
 
   // Publishes value to MQTT  
   int temp = (float)rtc.getTemperature();
