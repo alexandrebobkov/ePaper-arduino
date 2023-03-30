@@ -300,12 +300,13 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   display.print("   ");  
   char temp_cstr[16];
   display.print(itoa(temp, temp_cstr, 10));
+  //display.print(itoa(humidity, temp_cstr, 10));
   display.print("C");
 
   // Display humidity sensor reading
-  display.print("   ");  
-  char humidity_cstr[16];
-  display.print(itoa(humidity, humidity_cstr, 10));
+  display.print("   ");
+  char h_cstr[8];
+  display.print(itoa(humidity, h_cstr, 10));
   display.print("%");
   
   display.update();
@@ -419,6 +420,8 @@ void setup()
     Serial.print("        ID of 0x61 represents a BME 680.\n");
     while (1);
   }
+  else
+    humidity = bme.readHumidity();
 
   rtc.begin();
   
@@ -634,15 +637,18 @@ void loop()
   Serial.println("\n=================");
   Serial.print("Temperature = ");
   Serial.println(bme.readTemperature());
-  humidity = bme.readHumidity();
+  humidity = (float)bme.readHumidity();
   Serial.print("Humidity = ");
-  Serial.println(bme.readHumidity());
+  //Serial.println(bme.readHumidity());
+  Serial.print(humidity);
+  Serial.println("%");
   Serial.print("Pressure = ");
   Serial.print(bme.readPressure() / 100.0F);
   Serial.println(" hPa");
 
   // Publishes value to MQTT  
   int temp = (float)rtc.getTemperature();
+  int hty = (float)bme.readHumidity();
   int min = now.minute();
   int r = random();
   int analogValue = analogRead(LIGHT_SENSOR_PIN);
