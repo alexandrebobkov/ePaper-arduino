@@ -3,66 +3,44 @@
     
   ePaper embeded system program written in style adopted for learning.
   Adopted & written by: Alexander Bobkov
-  Mar 10, 2023
+  Mar 11, 2023
 */
 
 #include "secrets.h"
+#include <WiFi.h>
 #include <WiFiClientSecure.h>             // ESP32 library
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 //#include "WiFi.h"
-#include <WiFi.h>
+//#include <WiFi.h>
 //#include <Wire.h> 
-#include <GxEPD.h>
-#include <GxGDEW042Z15/GxGDEW042Z15.h>    // 4.2" b/w/r
-#include GxEPD_BitmapExamples
+//#include <GxEPD.h>
+//#include <GxGDEW042Z15/GxGDEW042Z15.h>    // 4.2" b/w/r
+//#include GxEPD_BitmapExamples
 // FreeFonts from Adafruit_GFX
-#include <Fonts/FreeMonoBold9pt7b.h>
-#include <Fonts/FreeMonoBold12pt7b.h>
-#include <Fonts/FreeMonoBold18pt7b.h>
-#include <Fonts/FreeMonoBold24pt7b.h>
-#include <GxIO/GxIO_SPI/GxIO_SPI.h>
-#include <GxIO/GxIO.h>
+//#include <Fonts/FreeMonoBold9pt7b.h>
+//#include <Fonts/FreeMonoBold12pt7b.h>
+//#include <Fonts/FreeMonoBold18pt7b.h>
+//#include <Fonts/FreeMonoBold24pt7b.h>
+//#include <GxIO/GxIO_SPI/GxIO_SPI.h>
+//#include <GxIO/GxIO.h>
 #include <SD.h>
 #include <SPI.h>
 //#include <Adafruit_GFX.h>
 #include <RTClib.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+#include <Adafruit_BMP280.h>
+//#include <Timelib.h>
 //#include <ErriezDS3231.h>
 //#include "GxIO.h"
 #include "mqtt.h"
 #include "automation.h"
+#include "automation-0.h"
+#include "dashboard-0.h"
+#include "dashboard.h"
 
-#if defined(ESP8266)
-GxIO_Class io(SPI, /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2); // arbitrary selection of D3(=0), D4(=2), selected for default of GxEPD_Class
-GxEPD_Class display(io, /*RST=D4*/ 2, /*BUSY=D2*/ 4); // default selection of D4(=2), D2(=4)
 
-#elif defined(ESP32)
-GxIO_Class io(SPI, /*CS=5*/ SS, /*DC=*/ 17, /*RST=*/ 16); // arbitrary selection of 17, 16
-GxEPD_Class display(io, /*RST=*/ 16, /*BUSY=*/ 4); // arbitrary selection of (16), 4
-
-#elif defined(ARDUINO_ARCH_SAMD)
-GxIO_Class io(SPI, /*CS=*/ 4, /*DC=*/ 7, /*RST=*/ 6);
-GxEPD_Class display(io, /*RST=*/ 6, /*BUSY=*/ 5);
-
-#elif defined(ARDUINO_GENERIC_STM32F103C) && defined(MCU_STM32F103C8)
-GxIO_Class io(SPI, /*CS=*/ SS, /*DC=*/ 3, /*RST=*/ 2);
-GxEPD_Class display(io, /*RST=*/ 2, /*BUSY=*/ 1);
-
-#elif defined(ARDUINO_GENERIC_STM32F103V) && defined(MCU_STM32F103VB)
-GxIO_Class io(SPI, /*CS=*/ SS, /*DC=*/ PE15, /*RST=*/ PE14); // DC, RST as wired by DESPI-M01
-GxEPD_Class display(io, /*RST=*/ PE14, /*BUSY=*/ PE13); // RST, BUSY as wired by DESPI-M01
-
-#elif defined(ARDUINO_AVR_MEGA2560)
-
-// select one, depending on your CS connection
-//GxIO_Class io(SPI, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9); // arbitrary selection of 8, 9 selected for default of GxEPD_Class
-//GxIO_Class io(SPI, /*CS=*/ 10, /*DC=*/ 8, /*RST=*/ 9); // arbitrary selection of 8, 9, CS on 10 (for CS same as on UNO, for SPI on ICSP use)
-GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
-#else
-
-GxIO_Class io(SPI, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9); // arbitrary selection of 8, 9 selected for default of GxEPD_Class
-GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
-#endif
 
 struct Data {
   const char* temp;
@@ -74,6 +52,10 @@ struct Data {
 //TaskHandle_t LampTask, StorageCard;
 
 RTC_DS3231 rtc;
+Adafruit_BME280 bme;
+Adafruit_BMP280 bmp;
+#define BME280_ADDRESS (0X76)
+#define SEALEVELPRESSURE_HPA (1013.25)
 //ErriezDS3231 rtc;
 
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
@@ -92,12 +74,18 @@ char aws_msg[25] = "";
 char info_ip_addr[16] = "000.000.000.000";
 char display_msg[4][50] = {"", "", "", ""};
 float temp = 0.0;
+float humidity = 0.0;
 
 void printDirectory(File dir, int numTabs);
-void drawLogo(File f);
+//void drawLogo(File f);
 
+//AWSIoT
 WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
+
+// Mosquitto
+WiFiClient espClient;
+PubSubClient mosquitto(espClient);
 
 // Section of code that processes JSON command(s) received from AWS IoT
 void messageHandler(char* topic, byte* payload, unsigned int length)
@@ -240,33 +228,7 @@ void Task2code (void * parameters) {
       digitalWrite(output_2, HIGH);
       vTaskDelay(125);
       digitalWrite(output_2, LOW);
-      vTaskDelay(1500); 
-
-      /*
-      Serial.print("[");
-      Serial.print(i);
-      Serial.print("]; ");
-      Serial.print("Sensor value: ");
-      //client.publish(AWS_IOT_CHANNEL_5, "0");
-      Serial.println(analogRead(LIGHT_SENSOR_PIN));  
-      */
-
-      /*if (c > 0 && c < 255)
-      {
-        analogWrite(RGB_BLUE_PIN, c);
-        c += v;
-      }
-      if (c == 255)
-        v = -10;
-      if (c == 0)
-        v = 10;*/
-
-      /*for (int c = 0; c < 255; c++)
-      {
-        analogWrite(RGB_BLUE_PIN, c);
-        vTaskDelay(50);
-      }*/
-
+      vTaskDelay(1500);
     }
 } 
 
@@ -296,11 +258,11 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   //const char footer[] = "\nWireless\nAutomation Board\n\nControlled via Cloud";
   const char footer[] = "\nSensors and Variables";
   const char message[] = "Command received:\nRelay 1 ON";
-  //strcpy(ip, "10.100.50.16");
   
   //display.updateWindow(70,20,300,400,false);
   display.fillScreen(GxEPD_WHITE);
   display.setTextColor(GxEPD_BLACK);
+  display.setTextColor(GxEPD_DARKGREY); //
   display.setFont(f);
   display.setCursor(80, 20);
   display.println(header);
@@ -335,16 +297,21 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   char cstr[16];
   display.print(itoa(v, cstr, 10));
   // Display temperature sensor reading
-  display.print("   ");
-  
+  display.print("   ");  
   char temp_cstr[16];
   display.print(itoa(temp, temp_cstr, 10));
+  //display.print(itoa(humidity, temp_cstr, 10));
   display.print("C");
+
+  // Display humidity sensor reading
+  display.print("   ");
+  char h_cstr[8];
+  display.print(itoa(humidity, h_cstr, 10));
+  display.print("%");
   
   display.update();
   //delay(5000);    
 }
-//void TaskScreen (void * parameters) {
 
 // Display information on ePaper display.
 void Task3code (void * parameters) {  
@@ -361,40 +328,125 @@ void Task3code (void * parameters) {
   } 
 }
 
+// Task for handling wireless connection
+void TaskConnection (void * parameters) {
+  for (;;) {
+    WiFi.mode(WIFI_STA);
+    String hostname = "ESP32LF";
+    WiFi.setHostname(hostname.c_str());
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  
+    Serial.println("Connecting to Wi-Fi ...");
+  
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+    }
+    Serial.print("\nCONNECTED\nIP: ");
+    Serial.println(WiFi.localIP());
+    // Update IP address for displaying.
+    String lan_addr = WiFi.localIP().toString();
+    lan_addr.toCharArray(info_ip_addr, lan_addr.length()+1);
+    vTaskSuspend(NULL);
+  }
+}
+
 // WeMos D1 esp8266: D8 as standard
     const int chipSelect = SS;
 
+void mosquito_callback (char* topic, byte* message, unsigned int length)
+{
+  Serial.print("\nMessage arrived on topic: ");
+  Serial.print(topic);
+  Serial.print(". Message: ");
+  String messageTemp;
 
+  for (int i=0; i < length; i++)
+  {
+    Serial.print((char)message[i]);
+    messageTemp += (char)message[i];
+  }
+  Serial.println();
+
+  if (String(topic) == "esp32/output")
+  {
+    Serial.print("Main. Changing output to: ");
+    if (messageTemp == "on")
+    {
+      Serial.println("Turn switch ON!\n");
+      digitalWrite(SWITCH_1, LOW);    // Active level LOW
+    }
+    else if (messageTemp == "off")
+    {
+      Serial.println("Turn switch OFF!\n");
+      digitalWrite(SWITCH_1, HIGH);
+    }
+  }
+}
+
+void setupMQTT() {
+  mosquitto.setServer(mqtt_server, 1883);
+  // set the callback function
+  mosquitto.setCallback(mosquito_callback);
+}
+
+void reconnect()
+{
+  while (!mosquitto.connected())
+  {
+    if (mosquitto.connect("ESP32Client"))
+    {
+      Serial.println("connected");
+      mosquitto.subscribe("esp32/output");
+    }
+  }
+}
 
 void setup()
 {
   Serial.begin(115200);
   Serial.println();
-  Serial.println("setup");
+  Serial.println("setup");  
   display.init(115200); // enable diagnostic output on Serial
   Serial.println("setup done");
 
+  unsigned status = bme.begin();//0x76); 
+  if (!status) {
+    Serial.println("Could not find a valid BME280 sensor, check wiring!");
+    Serial.print("SensorID was: 0x"); Serial.println(bme.sensorID(),16);
+    Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
+    Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
+    Serial.print("        ID of 0x60 represents a BME 280.\n");
+    Serial.print("        ID of 0x61 represents a BME 680.\n");
+    while (1);
+  }
+  else
+    humidity = bme.readHumidity();
+
+  rtc.begin();
   
   if (! rtc.begin())
   {
     Serial.println("Couldn't find RTC");
     while (1);
   }
-  if (rtc.lostPower()) {
+  
+  
+  // Uncomment when compiling for the first time
+  //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  /*if (rtc.lostPower()) {
     Serial.println("RTC lost power, lets set the time!");
     // following line sets the RTC to the date &amp; time this sketch was compiled
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     // This line sets the RTC with an explicit date &amp; time, for example to set
     // January 21, 2014 at 3am you would call:
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
-  }
-  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  }*/
+  
   temp = rtc.getTemperature();
-
-    
+  
   Serial.println("\n======================");
-  Serial.print("\nInitializing SD card...");
- 
+  Serial.print("\nInitializing SD card..."); 
   // we'll use the initialization code from the utility libraries
   // since we're just testing if the card is working!
   if (!SD.begin(chipSelect)) {
@@ -405,8 +457,7 @@ void setup()
     while (1);
   } else {
     Serial.println("Wiring is correct and a card is present.");
-  }
- 
+  } 
   // print the type of card
   Serial.println();
   Serial.print("Card type:         ");
@@ -426,31 +477,31 @@ void setup()
     default:
       Serial.println("Unknown");
   }
-
   Serial.print("Card size:  ");
-  Serial.println((float)SD.cardSize()/1000);
- 
+  Serial.println((float)SD.cardSize()/1000); 
   Serial.print("Total bytes: ");
-  Serial.println(SD.totalBytes());
- 
+  Serial.println(SD.totalBytes()); 
   Serial.print("Used bytes: ");
-  Serial.println(SD.usedBytes());
- 
+  Serial.println(SD.usedBytes()); 
   File dir =  SD.open("/");
   drawLogo(SD.open("/picture-001.bmp"));
   delay(5000);
-  //printDirectory(dir, 0);
-
   Serial.println("\n======================");
   
 
-  pinMode(LED_PIN, OUTPUT);
-  //digitalWrite(LED_PIN, HIGH);
-  pinMode(output_1, OUTPUT);
-  digitalWrite(output_1, HIGH);
-  pinMode(output_2, OUTPUT);
-  digitalWrite(output_2, HIGH);
-  pinMode(output_22, OUTPUT);
+  // Define switches pins
+  pinMode(SWITCH_1,   OUTPUT);
+  pinMode(SWITCH_2,   OUTPUT); 
+  pinMode(LED_PIN,    OUTPUT);
+  pinMode(output_1,   OUTPUT);
+  pinMode(output_2,   OUTPUT);
+  pinMode(output_22,  OUTPUT);
+
+  digitalWrite(SWITCH_1,  HIGH);
+  digitalWrite(SWITCH_2,  HIGH); 
+  //digitalWrite(LED_PIN, HIGH);  
+  digitalWrite(output_1,  HIGH);  
+  digitalWrite(output_2,  HIGH);  
   digitalWrite(output_22, HIGH);
 
   // RGB
@@ -459,7 +510,7 @@ void setup()
 
   //pinMode(RGB_BLUE_PIN, OUTPUT);
   ledcSetup(0, 5000, 8);
-  ledcAttachPin(RGB_BLUE_PIN, 0);
+  ledcAttachPin(RGB_B_PIN, 0);
   //ledcAttachPin(RGB_RED_PIN, 0);
   //digitalWrite(RGB_BLUE_PIN, HIGH);
   //analogWrite(RGB_BLUE_PIN, 255);
@@ -484,6 +535,8 @@ void setup()
   //xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);  
   xTaskCreatePinnedToCore(LampTaskCode, "Lamp Task", 1000, NULL, 5, &LampTask, 0);
   //xTaskCreatePinnedToCore(StorageCardcode, "Storage Card", 1000, NULL, 7, &StorageCard, 1);
+
+  //xTaskCreatePinnedToCore(TaskConnection, "Connection", 1000, NULL, 3, &Connection, 1);
   
 
   WiFi.mode(WIFI_STA);
@@ -503,6 +556,7 @@ void setup()
   // Update IP address for displaying.
   String lan_addr = WiFi.localIP().toString();
   lan_addr.toCharArray(info_ip_addr, lan_addr.length()+1);
+
   // Call Task to display information on ePaper display.
   xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);
   //info_ip_addr[16] = "000.000.000.000";
@@ -512,16 +566,14 @@ void setup()
   net.setCertificate(AWS_CERT_CRT);
   net.setPrivateKey(AWS_CERT_PRIVATE);
  
-  client.publish(AWS_IOT_CHANNEL_5, "10");
+  //client.publish(AWS_IOT_CHANNEL_5, "10");
   // Connect to the MQTT broker on the AWS endpoint we defined earlier
   client.setServer(AWS_IOT_ENDPOINT, 8883);
   //client.setServer(AWS_IOT_ENDPOINT, 443);
  
   // Create a message handler
   client.setCallback(messageHandler);
-
-  Serial.println("Connecting to AWS IoT");
- 
+  Serial.println("Connecting to AWS IoT"); 
   while (!client.connect(THINGNAME))
   {
     Serial.print(".");
@@ -532,21 +584,37 @@ void setup()
   {
     Serial.println("AWS IoT Timeout!");
     return;
-  }
- 
-  // Subscribe to a topic
+  } 
+  // AWS IoT Subscribe to a topic
   client.subscribe(AWS_IOT_CHANNEL_1);
   client.subscribe(AWS_IOT_CHANNEL_2);
   client.subscribe(AWS_IOT_CHANNEL_3);
   client.subscribe(AWS_IOT_CHANNEL_4);
-  client.subscribe(AWS_IOT_CHANNEL_5);
- 
-  Serial.println("AWS IoT Connected!");  
+  client.subscribe(AWS_IOT_CHANNEL_5); 
+  Serial.println("AWS IoT Connected!");
+
+  /**/
+  // MOSQUITTO MQTT
+  Serial.println("Connecting to Mosquitto");
+  //mosquitto.publish(MQTT_IOT_CHANNEL_0, "HI");
+  mosquitto.setServer(mqtt_server, 1883);
+  mosquitto.setCallback(mosquito_callback);
+  if(mosquitto.connect("ESP32")) {
+    Serial.println("Mosquitto Connected!");
+    mosquitto.subscribe("esp32/output");
+    mosquitto.setCallback(mosquito_callback);
+  }
+  else
+    Serial.println(mosquitto.state());
 }
+
+
 
 void loop()
 {
   DateTime now = rtc.now();
+  String date = now.timestamp();
+  Serial.println(date);
   Serial.print(now.year(), DEC);
   Serial.print('/');
   Serial.print(now.month(), DEC);
@@ -566,8 +634,21 @@ void loop()
   //Serial.println(rtc.getTemperature(), DEC);
   Serial.println(temp, DEC);
 
+  Serial.println("\n=================");
+  Serial.print("Temperature = ");
+  Serial.println(bme.readTemperature());
+  humidity = (float)bme.readHumidity();
+  Serial.print("Humidity = ");
+  //Serial.println(bme.readHumidity());
+  Serial.print(humidity);
+  Serial.println("%");
+  Serial.print("Pressure = ");
+  Serial.print(bme.readPressure() / 100.0F);
+  Serial.println(" hPa");
+
   // Publishes value to MQTT  
   int temp = (float)rtc.getTemperature();
+  int hty = (float)bme.readHumidity();
   int min = now.minute();
   int r = random();
   int analogValue = analogRead(LIGHT_SENSOR_PIN);
@@ -575,21 +656,20 @@ void loop()
   client.publish(AWS_IOT_CHANNEL_5, itoa(min, cstr, 10));
   client.publish(AWS_IOT_CHANNEL_5, itoa(temp, cstr, 10));
 
-  
-  
-/*
-  
-  if (analogValue < ANALOG_THRESHOLD)
-    digitalWrite(LED_PIN, LOW);
-  else
-    digitalWrite(LED_PIN, HIGH);
-    */
+  // Mosquitto
+  mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
+  mosquitto.publish(MQTT_IOT_CHANNEL_0, "10");
+  Serial.println("test_topic: 10");
+  delay(1000);
+  mosquitto.publish(MQTT_IOT_CHANNEL_0, "3");
+  Serial.println("test_topic: 3");
 #if !defined(__AVR)
 
 #else
 
 #endif
   client.loop();
+  mosquitto.loop();
   for (int d = 20; d <= 255; d++)
   {
     ledcWrite(0, d);
@@ -600,6 +680,7 @@ void loop()
     ledcWrite(0, d);
     delay(25);
   }
+
   delay(1000);
 }
 
@@ -629,239 +710,4 @@ void printDirectory(File dir, int numTabs) {
     entry.close();
   }
 }
-
-uint16_t read16(File& f)
-{
-  // BMP data is stored little-endian, same as Arduino.
-  uint16_t result;
-  ((uint8_t *)&result)[0] = f.read(); // LSB
-  ((uint8_t *)&result)[1] = f.read(); // MSB
-  return result;
-}
-
-uint32_t read32(File& f)
-{
-  // BMP data is stored little-endian, same as Arduino.
-  uint32_t result;
-  ((uint8_t *)&result)[0] = f.read(); // LSB
-  ((uint8_t *)&result)[1] = f.read();
-  ((uint8_t *)&result)[2] = f.read();
-  ((uint8_t *)&result)[3] = f.read(); // MSB
-  return result;
-}
-
-static const uint16_t input_buffer_pixels = 800; // may affect performance
-static const uint16_t max_row_width = 1448; // for up to 6" display 1448x1072
-static const uint16_t max_palette_pixels = 256; // for depth <= 8
-uint8_t input_buffer[3 * input_buffer_pixels]; // up to depth 24
-uint8_t output_row_mono_buffer[max_row_width / 8]; // buffer for at least one row of b/w bits
-uint8_t output_row_color_buffer[max_row_width / 8]; // buffer for at least one row of color bits
-uint8_t mono_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 b/w
-uint8_t color_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 c/w
-uint16_t rgb_palette_buffer[max_palette_pixels]; // palette buffer for depth <= 8 for buffered graphics, needed for 7-color display
-
-
-void drawBitmapFromSD(File file, int16_t x, int16_t y, bool with_color)
-//void drawBitmapFromSD(const char *filename, int16_t x, int16_t y, bool with_color)
-{
-  bool valid = false; // valid format to be handled
-  bool flip = true; // bitmap is stored bottom-to-top
-  bool has_multicolors = false;//display.epd2.panel == GxEPD2::ACeP565;
-  uint32_t startTime = millis();
-  if ((x >= display.width()) || (y >= display.height())) return;
-  Serial.println();
-  Serial.print("Loading image '");
-  /*Serial.print(filename);
-  Serial.println('\'');
-#if defined(ESP32)
-  file = SD.open(String("/") + filename, FILE_READ);
-  if (!file)
-  {
-    Serial.print("File not found");
-    return;
-  }
-#else
-  file = SD.open(filename);
-  if (!file)
-  {
-    Serial.print("File not found");
-    return;
-  }
-#endif*/
-  // Parse BMP header
-  if (read16(file) == 0x4D42) // BMP signature
-  {
-    uint32_t fileSize = read32(file);
-    uint32_t creatorBytes = read32(file); //(void)creatorBytes; //unused
-    uint32_t imageOffset = read32(file); // Start of image data
-    uint32_t headerSize = read32(file);
-    uint32_t width  = read32(file);
-    int32_t height = (int32_t) read32(file);
-    uint16_t planes = read16(file);
-    uint16_t depth = read16(file); // bits per pixel
-    uint32_t format = read32(file);
-    if ((planes == 1) && ((format == 0) || (format == 3))) // uncompressed is handled, 565 also
-    {
-      Serial.print("File size: "); Serial.println(fileSize);
-      Serial.print("Image Offset: "); Serial.println(imageOffset);
-      Serial.print("Header size: "); Serial.println(headerSize);
-      Serial.print("Bit Depth: "); Serial.println(depth);
-      Serial.print("Image size: ");
-      Serial.print(width);
-      Serial.print('x');
-      Serial.println(height);
-      // BMP rows are padded (if needed) to 4-byte boundary
-      uint32_t rowSize = (width * depth / 8 + 3) & ~3;
-      if (depth < 8) rowSize = ((width * depth + 8 - depth) / 8 + 3) & ~3;
-      if (height < 0)
-      {
-        height = -height;
-        flip = false;
-      }
-      uint16_t w = width;
-      uint16_t h = height;
-      if ((x + w - 1) >= display.width())  w = display.width()  - x;
-      if ((y + h - 1) >= display.height()) h = display.height() - y;
-      //if (w <= max_row_width) // handle with direct drawing
-      {
-        valid = true;
-        uint8_t bitmask = 0xFF;
-        uint8_t bitshift = 8 - depth;
-        uint16_t red, green, blue;
-        bool whitish = false;
-        bool colored = false;
-        if (depth == 1) with_color = false;
-        if (depth <= 8)
-        {
-          if (depth < 8) bitmask >>= depth;
-          //file.seek(54); //palette is always @ 54
-          file.seek(imageOffset - (4 << depth)); //54 for regular, diff for colorsimportant
-          for (uint16_t pn = 0; pn < (1 << depth); pn++)
-          {
-            blue  = file.read();
-            green = file.read();
-            red   = file.read();
-            file.read();
-            whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
-            colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0)); // reddish or yellowish?
-            if (0 == pn % 8) mono_palette_buffer[pn / 8] = 0;
-            mono_palette_buffer[pn / 8] |= whitish << pn % 8;
-            if (0 == pn % 8) color_palette_buffer[pn / 8] = 0;
-            color_palette_buffer[pn / 8] |= colored << pn % 8;
-            rgb_palette_buffer[pn] = ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | ((blue & 0xF8) >> 3);
-          }
-        }
-        
-        
-          uint32_t rowPosition = flip ? imageOffset + (height - h) * rowSize : imageOffset;
-          for (uint16_t row = 0; row < h; row++, rowPosition += rowSize) // for each line
-          {
-            uint32_t in_remain = rowSize;
-            uint32_t in_idx = 0;
-            uint32_t in_bytes = 0;
-            uint8_t in_byte = 0; // for depth <= 8
-            uint8_t in_bits = 0; // for depth <= 8
-            uint16_t color = GxEPD_WHITE;
-            file.seek(rowPosition);
-            for (uint16_t col = 0; col < w; col++) // for each pixel
-            {
-              // Time to read more pixel data?
-              if (in_idx >= in_bytes) // ok, exact match for 24bit also (size IS multiple of 3)
-              {
-                in_bytes = file.read(input_buffer, in_remain > sizeof(input_buffer) ? sizeof(input_buffer) : in_remain);
-                in_remain -= in_bytes;
-                in_idx = 0;
-              }
-              switch (depth)
-              {
-                case 24:
-                  blue = input_buffer[in_idx++];
-                  green = input_buffer[in_idx++];
-                  red = input_buffer[in_idx++];
-                  whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
-                  colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0)); // reddish or yellowish?
-                  color = ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | ((blue & 0xF8) >> 3);
-                  break;
-                case 16:
-                  {
-                    uint8_t lsb = input_buffer[in_idx++];
-                    uint8_t msb = input_buffer[in_idx++];
-                    if (format == 0) // 555
-                    {
-                      blue  = (lsb & 0x1F) << 3;
-                      green = ((msb & 0x03) << 6) | ((lsb & 0xE0) >> 2);
-                      red   = (msb & 0x7C) << 1;
-                      color = ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | ((blue & 0xF8) >> 3);
-                    }
-                    else // 565
-                    {
-                      blue  = (lsb & 0x1F) << 3;
-                      green = ((msb & 0x07) << 5) | ((lsb & 0xE0) >> 3);
-                      red   = (msb & 0xF8);
-                      color = (msb << 8) | lsb;
-                    }
-                    whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
-                    colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0)); // reddish or yellowish?
-                  }
-                  break;
-                case 1:
-                case 4:
-                case 8:
-                  {
-                    if (0 == in_bits)
-                    {
-                      in_byte = input_buffer[in_idx++];
-                      in_bits = 8;
-                    }
-                    uint16_t pn = (in_byte >> bitshift) & bitmask;
-                    whitish = mono_palette_buffer[pn / 8] & (0x1 << pn % 8);
-                    colored = color_palette_buffer[pn / 8] & (0x1 << pn % 8);
-                    in_byte <<= depth;
-                    in_bits -= depth;
-                    color = rgb_palette_buffer[pn];
-                  }
-                  break;
-              }
-              if (with_color && has_multicolors)
-              {
-                // keep color
-              }
-              else if (whitish)
-              {
-                color = GxEPD_WHITE;
-              }
-              /*else if (colored && with_color)
-              {
-                color = GxEPD_COLORED;
-              }*/
-              else
-              {
-                color = GxEPD_BLACK;
-              }
-              uint16_t yrow = y + (flip ? h - row - 1 : row);
-              display.drawPixel(x + col, yrow, color);
-            } // end pixel
-          } // end line
-          Serial.print("page loaded in "); Serial.print(millis() - startTime); Serial.println(" ms");
-       // }
-        //while (display.nextPage());
-        Serial.print("loaded in "); Serial.print(millis() - startTime); Serial.println(" ms");
-      }
-    }
-  }
-  file.close();
-  if (!valid)
-  {
-    Serial.println("bitmap format not handled.");
-  }
-}
-
-void drawLogo(File f)
-{
-  int16_t w2 = display.width() / 2;
-  int16_t h2 = display.height() / 2;
-  drawBitmapFromSD(f, w2 - 64, h2 - 80, false);
-}
-
-
 
