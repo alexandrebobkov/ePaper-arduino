@@ -52,11 +52,18 @@ struct Data {
 //TaskHandle_t LampTask, StorageCard;
 
 RTC_DS3231 rtc;
+// WaveShare BME280
 Adafruit_BME280 bme;
-Adafruit_BMP280 bmp;
-#define BME280_ADDRESS (0X76)
+//#define BME280_ADDRESS (0X76)
 #define SEALEVELPRESSURE_HPA (1013.25)
 //ErriezDS3231 rtc;
+
+// BMP280
+#define BMP_SCK   (18)
+#define BMP_MISO  (19)
+#define BMP_MOSI  (23)
+#define BMP_CS    (5)
+Adafruit_BMP280 bmp(BMP_CS);
 
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
@@ -410,9 +417,11 @@ void setup()
   display.init(115200); // enable diagnostic output on Serial
   Serial.println("setup done");
 
+  // WaveShare BME280
   unsigned status = bme.begin();//0x76); 
+  //unsigned status = bmp.begin();//0x76); 
   if (!status) {
-    Serial.println("Could not find a valid BME280 sensor, check wiring!");
+    Serial.println("Could not find a valid BME/BMP280 sensor, check wiring!");
     Serial.print("SensorID was: 0x"); Serial.println(bme.sensorID(),16);
     Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
     Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
@@ -423,8 +432,16 @@ void setup()
   else
     humidity = bme.readHumidity();
 
-  rtc.begin();
-  
+  // BMP280
+  /*unsigned status_bmp280;
+  status_bmp280 = bmp.begin();
+  if (!status_bmp280) {
+    Serial.println("Could not find BMP280");
+    Serial.println(bme.sensorID(),16);
+    while (1);
+  }*/
+
+  rtc.begin();  
   if (! rtc.begin())
   {
     Serial.println("Couldn't find RTC");
@@ -634,7 +651,8 @@ void loop()
   //Serial.println(rtc.getTemperature(), DEC);
   Serial.println(temp, DEC);
 
-  Serial.println("\n=================");
+  // WaveShare BME280
+  Serial.println("\n==== BME-280 =============");
   Serial.print("Temperature = ");
   Serial.println(bme.readTemperature());
   humidity = (float)bme.readHumidity();
@@ -644,6 +662,14 @@ void loop()
   Serial.println("%");
   Serial.print("Pressure = ");
   Serial.print(bme.readPressure() / 100.0F);
+  Serial.println(" hPa");
+
+  // WaveShare BME280
+  Serial.println("\n==== BMP-280 =============");
+  Serial.print("Temperature = ");
+  Serial.println(bmp.readTemperature());
+  Serial.print("Pressure = ");
+  Serial.print(bmp.readPressure() / 100.0F);
   Serial.println(" hPa");
 
   // Publishes value to MQTT  
