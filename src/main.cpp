@@ -24,7 +24,7 @@
 //#include <Fonts/FreeMonoBold24pt7b.h>
 //#include <GxIO/GxIO_SPI/GxIO_SPI.h>
 //#include <GxIO/GxIO.h>
-#include <SD.h>
+
 #include <SPI.h>
 //#include <Adafruit_GFX.h>
 #include <RTClib.h>
@@ -39,7 +39,7 @@
 #include "automation-0.h"
 #include "dashboard-0.h"
 #include "dashboard.h"
-
+#include "recorder.h"
 
 
 struct Data {
@@ -358,9 +358,6 @@ void TaskConnection (void * parameters) {
   }
 }
 
-// WeMos D1 esp8266: D8 as standard
-    const int chipSelect = SS;
-
 void mosquito_callback (char* topic, byte* message, unsigned int length)
 {
   Serial.print("\nMessage arrived on topic: ");
@@ -423,10 +420,10 @@ void setup()
   if (!status) {
     Serial.println("Could not find a valid BME/BMP280 sensor, check wiring!");
     Serial.print("SensorID was: 0x"); Serial.println(bme.sensorID(),16);
-    Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
+    Serial.print("   ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
     Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
-    Serial.print("        ID of 0x60 represents a BME 280.\n");
-    Serial.print("        ID of 0x61 represents a BME 680.\n");
+    Serial.print("   ID of 0x60 represents a BME 280.\n");
+    Serial.print("   ID of 0x61 represents a BME 680.\n");
     while (1);
   }
   else
@@ -461,50 +458,10 @@ void setup()
   }*/
   
   temp = rtc.getTemperature();
-  
-  Serial.println("\n======================");
-  Serial.print("\nInitializing SD card..."); 
-  // we'll use the initialization code from the utility libraries
-  // since we're just testing if the card is working!
-  if (!SD.begin(chipSelect)) {
-    Serial.println("initialization failed. Things to check:");
-    Serial.println("* is a card inserted?");
-    Serial.println("* is your wiring correct?");
-    Serial.println("* did you change the chipSelect pin to match your shield or module?");
-    while (1);
-  } else {
-    Serial.println("Wiring is correct and a card is present.");
-  } 
-  // print the type of card
-  Serial.println();
-  Serial.print("Card type:         ");
-  switch (SD.cardType()) {
-    case CARD_NONE:
-      Serial.println("NONE");
-      break;
-    case CARD_MMC:
-      Serial.println("MMC");
-      break;
-    case CARD_SD:
-      Serial.println("SD");
-      break;
-    case CARD_SDHC:
-      Serial.println("SDHC");
-      break;
-    default:
-      Serial.println("Unknown");
-  }
-  Serial.print("Card size:  ");
-  Serial.println((float)SD.cardSize()/1000); 
-  Serial.print("Total bytes: ");
-  Serial.println(SD.totalBytes()); 
-  Serial.print("Used bytes: ");
-  Serial.println(SD.usedBytes()); 
-  File dir =  SD.open("/");
-  drawLogo(SD.open("/picture-001.bmp"));
-  delay(5000);
-  Serial.println("\n======================");
-  
+
+  initSdCard();
+  displayLogo();
+  updateJson();  
 
   // Define switches pins
   pinMode(SWITCH_1,   OUTPUT);
