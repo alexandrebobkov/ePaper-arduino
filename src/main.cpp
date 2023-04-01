@@ -24,7 +24,7 @@
 //#include <Fonts/FreeMonoBold24pt7b.h>
 //#include <GxIO/GxIO_SPI/GxIO_SPI.h>
 //#include <GxIO/GxIO.h>
-#include <SD.h>
+
 #include <SPI.h>
 //#include <Adafruit_GFX.h>
 #include <RTClib.h>
@@ -39,7 +39,7 @@
 #include "automation-0.h"
 #include "dashboard-0.h"
 #include "dashboard.h"
-
+#include "recorder.h"
 
 
 struct Data {
@@ -52,11 +52,18 @@ struct Data {
 //TaskHandle_t LampTask, StorageCard;
 
 RTC_DS3231 rtc;
+// WaveShare BME280
 Adafruit_BME280 bme;
-Adafruit_BMP280 bmp;
-#define BME280_ADDRESS (0X76)
+//#define BME280_ADDRESS (0X76)
 #define SEALEVELPRESSURE_HPA (1013.25)
 //ErriezDS3231 rtc;
+
+// BMP280
+#define BMP_SCK   (18)
+#define BMP_MISO  (19)
+#define BMP_MOSI  (23)
+#define BMP_CS    (5)
+Adafruit_BMP280 bmp(BMP_CS);
 
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
@@ -351,9 +358,6 @@ void TaskConnection (void * parameters) {
   }
 }
 
-// WeMos D1 esp8266: D8 as standard
-    const int chipSelect = SS;
-
 void mosquito_callback (char* topic, byte* message, unsigned int length)
 {
   Serial.print("\nMessage arrived on topic: ");
@@ -410,21 +414,31 @@ void setup()
   display.init(115200); // enable diagnostic output on Serial
   Serial.println("setup done");
 
+  // WaveShare BME280
   unsigned status = bme.begin();//0x76); 
+  //unsigned status = bmp.begin();//0x76); 
   if (!status) {
-    Serial.println("Could not find a valid BME280 sensor, check wiring!");
+    Serial.println("Could not find a valid BME/BMP280 sensor, check wiring!");
     Serial.print("SensorID was: 0x"); Serial.println(bme.sensorID(),16);
-    Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
+    Serial.print("   ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
     Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
-    Serial.print("        ID of 0x60 represents a BME 280.\n");
-    Serial.print("        ID of 0x61 represents a BME 680.\n");
+    Serial.print("   ID of 0x60 represents a BME 280.\n");
+    Serial.print("   ID of 0x61 represents a BME 680.\n");
     while (1);
   }
   else
     humidity = bme.readHumidity();
 
-  rtc.begin();
-  
+  // BMP280
+  /*unsigned status_bmp280;
+  status_bmp280 = bmp.begin();
+  if (!status_bmp280) {
+    Serial.println("Could not find BMP280");
+    Serial.println(bme.sensorID(),16);
+    while (1);
+  }*/
+
+  rtc.begin();  
   if (! rtc.begin())
   {
     Serial.println("Couldn't find RTC");
@@ -444,50 +458,18 @@ void setup()
   }*/
   
   temp = rtc.getTemperature();
-  
-  Serial.println("\n======================");
-  Serial.print("\nInitializing SD card..."); 
-  // we'll use the initialization code from the utility libraries
-  // since we're just testing if the card is working!
-  if (!SD.begin(chipSelect)) {
-    Serial.println("initialization failed. Things to check:");
-    Serial.println("* is a card inserted?");
-    Serial.println("* is your wiring correct?");
-    Serial.println("* did you change the chipSelect pin to match your shield or module?");
-    while (1);
-  } else {
-    Serial.println("Wiring is correct and a card is present.");
-  } 
-  // print the type of card
-  Serial.println();
-  Serial.print("Card type:         ");
-  switch (SD.cardType()) {
-    case CARD_NONE:
-      Serial.println("NONE");
-      break;
-    case CARD_MMC:
-      Serial.println("MMC");
-      break;
-    case CARD_SD:
-      Serial.println("SD");
-      break;
-    case CARD_SDHC:
-      Serial.println("SDHC");
-      break;
-    default:
-      Serial.println("Unknown");
-  }
-  Serial.print("Card size:  ");
-  Serial.println((float)SD.cardSize()/1000); 
-  Serial.print("Total bytes: ");
-  Serial.println(SD.totalBytes()); 
-  Serial.print("Used bytes: ");
-  Serial.println(SD.usedBytes()); 
-  File dir =  SD.open("/");
-  drawLogo(SD.open("/picture-001.bmp"));
-  delay(5000);
-  Serial.println("\n======================");
-  
+
+  initSdCard();
+  display.fillScreen(GxEPD_WHITE);
+  displayLogo();
+  display.update();
+  delay(15000);
+  display.fillScreen(GxEPD_WHITE);
+  displayUi();
+  display.update();
+  delay(15000);
+
+  updateJson();  
 
   // Define switches pins
   pinMode(SWITCH_1,   OUTPUT);
@@ -634,7 +616,8 @@ void loop()
   //Serial.println(rtc.getTemperature(), DEC);
   Serial.println(temp, DEC);
 
-  Serial.println("\n=================");
+  // WaveShare BME280
+  Serial.println("\n==== BME-280 =============");
   Serial.print("Temperature = ");
   Serial.println(bme.readTemperature());
   humidity = (float)bme.readHumidity();
@@ -644,6 +627,14 @@ void loop()
   Serial.println("%");
   Serial.print("Pressure = ");
   Serial.print(bme.readPressure() / 100.0F);
+  Serial.println(" hPa");
+
+  // WaveShare BME280
+  Serial.println("\n==== BMP-280 =============");
+  Serial.print("Temperature = ");
+  Serial.println(bmp.readTemperature());
+  Serial.print("Pressure = ");
+  Serial.print(bmp.readPressure() / 100.0F);
   Serial.println(" hPa");
 
   // Publishes value to MQTT  
