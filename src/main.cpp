@@ -469,6 +469,8 @@ void setup()
   display.update();
   delay(15000);
 
+  
+
   updateJson();  
 
   // Define switches pins

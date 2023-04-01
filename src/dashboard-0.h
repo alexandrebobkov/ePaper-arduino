@@ -270,13 +270,14 @@ void drawBitmapFromSD(File file, int16_t x, int16_t y, bool with_color)
 
 void drawLogo(File f)
 {
-  int16_t w2 = display.width() / 2;
-  int16_t h2 = display.height() / 2;
+  // WaveShare 4.2" display
+  int16_t w2 = display.width() / 2;   // total width 400 pixels
+  int16_t h2 = display.height() / 2;  // total height 300 pixels
   Serial.print("Display width: ");
   Serial.println(display.width());
   Serial.print("Display height: ");
   Serial.println(display.height());
-  drawBitmapFromSD(f, w2-200, h2-150, false);
+  drawBitmapFromSD(f, w2-200, h2-150, false);   // Set initial (x, y) coordinates
 }
 
 /*
