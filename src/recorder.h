@@ -82,8 +82,7 @@ void updateJson () {
         if (error) {
             // if the file didn't open, print an error:
             Serial.println(F("Error parsing JSON "));
-            Serial.println(error.c_str());
- 
+            Serial.println(error.c_str()); 
             // create an empty JSON object
             obj = jdoc.to<JsonObject>();
         }
@@ -129,9 +128,17 @@ void updateJson () {
     Serial.println("\n==== recorder.h Writing JSON file. DONE ====");
 }
 
-void displayLogo () {
-  File dir =  SD.open("/");
-  drawLogo(SD.open("/picture-001.bmp"));
-  delay(5000);
-  Serial.println("\n==== Logo Displayed ====");
+void displayImage (String file_path) {
+    File dir =  SD.open("/");
+    drawLogo(SD.open(file_path));
+    Serial.println("\n==== Logo Displayed ====");
 }
+
+void displayUi () {
+    displayImage("/ui-002.bmp");
+}
+void displayLogo () {
+    displayImage("/picture-001.bmp");
+}
+
+

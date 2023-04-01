@@ -272,5 +272,23 @@ void drawLogo(File f)
 {
   int16_t w2 = display.width() / 2;
   int16_t h2 = display.height() / 2;
+  Serial.print("Display width: ");
+  Serial.println(display.width());
+  Serial.print("Display height: ");
+  Serial.println(display.height());
+  drawBitmapFromSD(f, w2-200, h2-150, false);
+}
+
+/*
+void drawLogo(File f)
+{
+  int16_t w2 = display.width() / 2;
+  int16_t h2 = display.height() / 2;
   drawBitmapFromSD(f, w2 - 64, h2 - 80, false);
 }
+void drawLogo(File f)
+{
+  int16_t w2 = 400 / 2;
+  int16_t h2 = 300 / 2;
+  drawBitmapFromSD(f, 400, 300, false);
+}*/

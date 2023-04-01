@@ -460,7 +460,15 @@ void setup()
   temp = rtc.getTemperature();
 
   initSdCard();
+  display.fillScreen(GxEPD_WHITE);
   displayLogo();
+  display.update();
+  delay(15000);
+  display.fillScreen(GxEPD_WHITE);
+  displayUi();
+  display.update();
+  delay(15000);
+
   updateJson();  
 
   // Define switches pins
