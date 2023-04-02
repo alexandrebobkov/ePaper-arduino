@@ -277,7 +277,7 @@ void drawLogo(File f)
   Serial.println(display.width());
   Serial.print("Display height: ");
   Serial.println(display.height());
-  drawBitmapFromSD(f, w2-200, h2-150, false);   // Set initial (x, y) coordinates
+  drawBitmapFromSD(f, w2-200, h2-150, false);   // Set initial (x, y) coordinates to (0, 0)
 }
 
 /*

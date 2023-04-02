@@ -82,6 +82,7 @@ char info_ip_addr[16] = "000.000.000.000";
 char display_msg[4][50] = {"", "", "", ""};
 float temp = 0.0;
 float humidity = 0.0;
+float pressure = 0.0;
 
 void printDirectory(File dir, int numTabs);
 //void drawLogo(File f);
@@ -290,6 +291,7 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   Serial.println(n);
 
   //display.drawRect(2,250,298,148, GxEPD_RED);
+  display.setFont(&FreeMonoBold9pt7b);
   display.print("IP: ");
   display.println(ip);
   display.println(text);  
@@ -301,20 +303,26 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   display.setTextColor(GxEPD_BLACK);
   // Display light sensor reading
   int v = analogRead(LIGHT_SENSOR_PIN);
-  char cstr[16];
-  display.print(itoa(v, cstr, 10));
+  char cstr[8];//16];
+  display.println(itoa(v, cstr, 10));
   // Display temperature sensor reading
-  display.print("   ");  
-  char temp_cstr[16];
+  display.print("Temperature: ");  
+  char temp_cstr[8];//16];
   display.print(itoa(temp, temp_cstr, 10));
   //display.print(itoa(humidity, temp_cstr, 10));
-  display.print("C");
+  display.println("C");
 
   // Display humidity sensor reading
-  display.print("   ");
+  display.print("Humidity: ");
   char h_cstr[8];
   display.print(itoa(humidity, h_cstr, 10));
-  display.print("%");
+  display.println("%");
+
+  // Display pressure sensor reading
+  display.print("Pressure: ");
+  char p_cstr[8];
+  display.print(itoa(pressure, p_cstr, 10));
+  display.print("hPa");
   
   display.update();
   //delay(5000);    
@@ -426,8 +434,10 @@ void setup()
     Serial.print("   ID of 0x61 represents a BME 680.\n");
     while (1);
   }
-  else
+  else {
     humidity = bme.readHumidity();
+    pressure = bme.readPressure()  / 100.0F;
+  }
 
   // BMP280
   /*unsigned status_bmp280;
@@ -469,7 +479,7 @@ void setup()
   display.update();
   delay(15000);
 
-  
+
 
   updateJson();  
 
@@ -627,8 +637,9 @@ void loop()
   //Serial.println(bme.readHumidity());
   Serial.print(humidity);
   Serial.println("%");
+  pressure = (float)bme.readPressure() / 100.0F;
   Serial.print("Pressure = ");
-  Serial.print(bme.readPressure() / 100.0F);
+  Serial.print(pressure);
   Serial.println(" hPa");
 
   // WaveShare BME280
