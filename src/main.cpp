@@ -322,7 +322,7 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   display.print("Pressure: ");
   char p_cstr[8];
   display.print(itoa(pressure, p_cstr, 10));
-  display.print("hPa");
+  display.print(" kPa");
   
   display.update();
   //delay(5000);    
@@ -640,7 +640,7 @@ void loop()
   pressure = (float)bme.readPressure() / 100.0F;
   Serial.print("Pressure = ");
   Serial.print(pressure);
-  Serial.println(" hPa");
+  Serial.println(" kPa");
 
   // WaveShare BME280
   Serial.println("\n==== BMP-280 =============");
@@ -652,7 +652,9 @@ void loop()
 
   // Publishes value to MQTT  
   int temp = (float)rtc.getTemperature();
-  int hty = (float)bme.readHumidity();
+  int bme_humidity = (float)bme.readHumidity();
+  int bme_temperature = (float)bme.readTemperature();
+  int bme_pressure = (float)bme.readPressure() / 100.0F;
   int min = now.minute();
   int r = random();
   int analogValue = analogRead(LIGHT_SENSOR_PIN);
@@ -662,11 +664,16 @@ void loop()
 
   // Mosquitto
   mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
+  mosquitto.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(bme_temperature, cstr, 10));
+  mosquitto.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(bme_pressure, cstr, 10));
+  mosquitto.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(bme_humidity, cstr, 10));
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "10");
   Serial.println("test_topic: 10");
   delay(1000);
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "3");
   Serial.println("test_topic: 3");
+  delay(1000);
+  
 #if !defined(__AVR)
 
 #else
@@ -685,7 +692,7 @@ void loop()
     delay(25);
   }
 
-  delay(1000);
+  
 }
 
 void printDirectory(File dir, int numTabs) {
