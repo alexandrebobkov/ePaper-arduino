@@ -99,18 +99,32 @@ void updateJson () {
     JsonArray data;
     // Check if exist the array
     if (!obj.containsKey(F("data"))) {
-        Serial.println(F("Not find data array! Crete one!"));
+        Serial.println(F("Not fond data array! Crete one!"));
         data = obj.createNestedArray(F("data"));
     } else {
-        Serial.println(F("Find data array!"));
+        Serial.println(F("Fond data array!"));
         data = obj[F("data")];
     }
+
+    JsonArray sensors;
+    if (!obj.containsKey(F("sensors"))) {
+        Serial.println(F("Not fond sensors array! Crete one!"));
+        sensors = obj.createNestedArray(F("data"));
+    } else {
+        Serial.println(F("Fond sensors array!"));
+        sensors = obj[F("sensors")];
+    }
+
  
     // create an object to add to the array
-    JsonObject objArrayData = data.createNestedObject();
- 
+    JsonObject objArrayData = data.createNestedObject(); 
     objArrayData["prevNumOfElem"] = data.size();
     objArrayData["newNumOfElem"] = data.size() + 1;
+
+    JsonObject objSensorsData = sensors.createNestedObject();
+    objSensorsData["Humidity"] = "26%";
+    objSensorsData["Temperature"] = 10;
+    objSensorsData["Pressure"] = 10;
  
     SD.remove(logs_filename);
  
