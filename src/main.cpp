@@ -470,14 +470,15 @@ void setup()
   temp = rtc.getTemperature();
 
   initSdCard();
+  
   display.fillScreen(GxEPD_WHITE);
   displayLogo();
   display.update();
-  delay(15000);
+  delay(5000);
   display.fillScreen(GxEPD_WHITE);
   displayUi();
   display.update();
-  delay(15000);
+  delay(5000);
 
 
 
