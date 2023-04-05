@@ -470,6 +470,7 @@ void setup()
   temp = rtc.getTemperature();
 
   initSdCard();
+  updateJson();  
   
   display.fillScreen(GxEPD_WHITE);
   displayLogo();
@@ -482,7 +483,7 @@ void setup()
 
 
 
-  updateJson();  
+  
 
   // Define switches pins
   pinMode(SWITCH_1,   OUTPUT);

@@ -3,7 +3,7 @@
 const int chipSelect = SS;
 
 // Filename where JSON logs are recorded to
-const char* logs_filename = "/sensors.txt";
+const char* logs_filename = "/data.txt";
 File file;
 
 void initSdCard() {
@@ -151,8 +151,11 @@ void updateJson () {
 }
 
 void displayImage (String file_path) {
-    File dir =  SD.open("/");
-    drawLogo(SD.open(file_path));
+    //File dir =  SD.open("/");
+    file = SD.open(file_path);
+    drawLogo(file);
+    file.close();
+    //SD.end();
     Serial.println("\n==== Logo Displayed ====");
 }
 
