@@ -58,6 +58,9 @@ Adafruit_BME280 bme;
 #define SEALEVELPRESSURE_HPA (1013.25)
 //ErriezDS3231 rtc;
 
+Recorder rec;
+File f_rec;
+
 // BMP280
 #define BMP_SCK   (18)
 #define BMP_MISO  (19)
@@ -469,17 +472,25 @@ void setup()
   
   temp = rtc.getTemperature();
 
-  initSdCard();
-  updateJson();  
+  //initSdCard();
+  Serial.println("calling rec.initSD()");
+  f_rec = rec.initSdCard();
+  //Serial.println("calling rec.openFile()");
+  //f_rec = rec.openFile();
+  
+  //updateJson();  
+  //updateData();  
   
   display.fillScreen(GxEPD_WHITE);
-  displayLogo();
+  /*rec.displayImage("/ui-002.bmp");
+  //displayLogo();
   display.update();
   delay(5000);
   display.fillScreen(GxEPD_WHITE);
-  displayUi();
+  rec.displayImage("/picture-001.bmp");
+ // displayUi();
   display.update();
-  delay(5000);
+  delay(5000);*/
 
 
 
@@ -675,6 +686,14 @@ void loop()
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "3");
   Serial.println("test_topic: 3");
   delay(1000);
+  // Append sensors values to a text file.
+  //initSdCard();
+  
+  //Serial.println("calling rec.openFile()");
+  //f_rec = rec.openFile();
+  Serial.println("Calling appendValues()");
+  rec.appendValues(f_rec, date, bme_temperature, bme_humidity, bme_pressure);
+  //rec.closeFile(f_rec);
   
 #if !defined(__AVR)
 
