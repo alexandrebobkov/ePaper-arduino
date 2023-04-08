@@ -473,7 +473,10 @@ void setup()
   temp = rtc.getTemperature();
 
   //initSdCard();
+  Serial.println("calling rec.initSD()");
   f_rec = rec.initSdCard();
+  //Serial.println("calling rec.openFile()");
+  //f_rec = rec.openFile();
   
   //updateJson();  
   //updateData();  
@@ -686,7 +689,9 @@ void loop()
   // Append sensors values to a text file.
   //initSdCard();
   
-  f_rec = rec.openFile();
+  //Serial.println("calling rec.openFile()");
+  //f_rec = rec.openFile();
+  Serial.println("Calling appendValues()");
   rec.appendValues(f_rec, date, bme_temperature, bme_humidity, bme_pressure);
   //rec.closeFile(f_rec);
   

@@ -112,6 +112,7 @@ void Recorder::appendValues(File f, String time, float temperature, float humidi
         f.println(data_string);
         f.print("Time, ");
         f.println(millis());
+        f.flush();
     }
     //file.close();
 
