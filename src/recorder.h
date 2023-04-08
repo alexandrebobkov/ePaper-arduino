@@ -3,13 +3,26 @@
 const int chipSelect = SS;
 
 // Filename where JSON logs are recorded to
+//const char* logs_filename = "/logs.txt";//data.txt";
 const char* logs_filename = "/data.txt";
-File file;
+//File file;
 
-void initSdCard() {
+class Recorder {
+    public:
+        File initSdCard();
+        File openFile();
+        void closeFile(File f);
+        void appendValues(File f, String time, float temperature, float humidity, float pressure);
+        void displayImage (String file_path);
+    private:
+        File file;
+};
+
+File Recorder::initSdCard() {
 
     Serial.println("\n======================");
     Serial.print("\nInitializing SD card..."); 
+
     // Initialize SD library
     if (!SD.begin(chipSelect)) {
         Serial.println("initialization failed. Things to check:");
@@ -47,30 +60,97 @@ void initSdCard() {
     Serial.print("Used bytes: ");
     Serial.println(SD.usedBytes());
 
+    file = SD.open(logs_filename, FILE_APPEND);
+
     // Remove previous json file
     //SD.remove(logs_filename);
     Serial.println("\n==== SD Card Initialized ====");
+
+    return file;
 }
 
-void printFile (const char* filename) {
-    file = SD.open(filename);
-    if (!file) {
+void printFile (File f, const char* filename) {
+    f = SD.open(filename);
+    if (!f) {
         Serial.println(F("Failed to read file"));
         return;
     }
 
-    while (file.available()) {
-        Serial.print((char)file.read());
+    while (f.available()) {
+        Serial.print((char)f.read());
     }
     Serial.println();
+    f.close();
+}
+
+File Recorder::openFile() {
+    return SD.open(logs_filename, FILE_APPEND);
+}
+void Recorder::closeFile(File f) {
+    f.close();
+}
+void Recorder::appendValues(File f, String time, float temperature, float humidity, float pressure) {
+    String data_string, temperature_s, humidity_s, pressure_s;
+
+    //floatToString(temperature_s, temperature, 4);
+    Serial.println("\n==== recorder.h Appending sensor values. ====");
+    //File file = SD.open(logs_filename, FILE_WRITE);
+    //file = SD.open(logs_filename, FILE_APPEND);
+    
+    if (!f) {
+    //if (!SD.exists(logs_filename)) {
+        Serial.println(F("File does not exist."));
+        f.println("Sensors values.");
+        f.println("Time | Sensor Value");
+    }
+    else {
+        Serial.println("Appending sensor values ...");
+        data_string = time + ", "
+        +String(temperature) + "C, "
+        +String(humidity) + "%, "
+        +String(pressure) + "kPa";
+        f.println(data_string);
+        f.print("Time, ");
+        f.println(millis());
+    }
+    //file.close();
+
+    //printFile(logs_filename);
+    //return true;
+    
+    Serial.println("Time: "+time+" "+"   Temperature: "+temperature+"C   Humidity: "+humidity+"%   Pressure: "+pressure+"kPa");
+    Serial.println("==== recorder.h Appended sensor values. ====");
+}
+
+void updateData() {
+    String data_string;
+    Serial.println("\n==== recorder.h Writing data file. ====");
+    //File file = SD.open(logs_filename, FILE_WRITE);
+    File file = SD.open(logs_filename, FILE_APPEND);
+    
+    if (!file) {
+    //if (!SD.exists(logs_filename)) {
+        Serial.println(F("File does not exist."));
+        file.println("Sensors values.");
+        file.println("Time | Sensor Value");
+    }
+    else {
+        data_string = "57715," + String(10.0);
+        file.println(data_string);
+        /*file.print("Time, ");
+        file.print(millis());
+        file.println("10.0");*/
+    }
     file.close();
+
+    printFile(file, logs_filename);
 }
 
 void updateJson () {
 
     Serial.println("\n==== recorder.h Writing JSON file. ====");
 
-    DynamicJsonDocument jdoc(2048);
+    DynamicJsonDocument jdoc(1024);//2048);
     JsonObject obj;
 
     File file = SD.open(logs_filename, FILE_WRITE);
@@ -150,7 +230,7 @@ void updateJson () {
     Serial.println("\n==== recorder.h Writing JSON file. DONE ====");
 }
 
-void displayImage (String file_path) {
+void Recorder::displayImage (String file_path) {
     //File dir =  SD.open("/");
     file = SD.open(file_path);
     drawLogo(file);
@@ -159,9 +239,9 @@ void displayImage (String file_path) {
     Serial.println("\n==== Logo Displayed ====");
 }
 
-void displayUi () {
+/*void displayUi () {
     displayImage("/ui-002.bmp");
 }
 void displayLogo () {
     displayImage("/picture-001.bmp");
-}
+}*/
