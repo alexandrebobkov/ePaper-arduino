@@ -82,6 +82,7 @@ char info_ip_addr[16] = "000.000.000.000";
 char display_msg[4][50] = {"", "", "", ""};
 float temp = 0.0;
 float humidity = 0.0;
+float pressure = 0.0;
 
 void printDirectory(File dir, int numTabs);
 //void drawLogo(File f);
@@ -290,6 +291,7 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   Serial.println(n);
 
   //display.drawRect(2,250,298,148, GxEPD_RED);
+  display.setFont(&FreeMonoBold9pt7b);
   display.print("IP: ");
   display.println(ip);
   display.println(text);  
@@ -301,20 +303,26 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   display.setTextColor(GxEPD_BLACK);
   // Display light sensor reading
   int v = analogRead(LIGHT_SENSOR_PIN);
-  char cstr[16];
-  display.print(itoa(v, cstr, 10));
+  char cstr[8];//16];
+  display.println(itoa(v, cstr, 10));
   // Display temperature sensor reading
-  display.print("   ");  
-  char temp_cstr[16];
+  display.print("Temperature: ");  
+  char temp_cstr[8];//16];
   display.print(itoa(temp, temp_cstr, 10));
   //display.print(itoa(humidity, temp_cstr, 10));
-  display.print("C");
+  display.println("C");
 
   // Display humidity sensor reading
-  display.print("   ");
+  display.print("Humidity: ");
   char h_cstr[8];
   display.print(itoa(humidity, h_cstr, 10));
-  display.print("%");
+  display.println("%");
+
+  // Display pressure sensor reading
+  display.print("Pressure: ");
+  char p_cstr[8];
+  display.print(itoa(pressure, p_cstr, 10));
+  display.print(" kPa");
   
   display.update();
   //delay(5000);    
@@ -426,8 +434,10 @@ void setup()
     Serial.print("   ID of 0x61 represents a BME 680.\n");
     while (1);
   }
-  else
+  else {
     humidity = bme.readHumidity();
+    pressure = bme.readPressure()  / 100.0F;
+  }
 
   // BMP280
   /*unsigned status_bmp280;
@@ -460,16 +470,20 @@ void setup()
   temp = rtc.getTemperature();
 
   initSdCard();
+  updateJson();  
+  
   display.fillScreen(GxEPD_WHITE);
   displayLogo();
   display.update();
-  delay(15000);
+  delay(5000);
   display.fillScreen(GxEPD_WHITE);
   displayUi();
   display.update();
-  delay(15000);
+  delay(5000);
 
-  updateJson();  
+
+
+  
 
   // Define switches pins
   pinMode(SWITCH_1,   OUTPUT);
@@ -625,9 +639,10 @@ void loop()
   //Serial.println(bme.readHumidity());
   Serial.print(humidity);
   Serial.println("%");
+  pressure = (float)bme.readPressure() / 100.0F;
   Serial.print("Pressure = ");
-  Serial.print(bme.readPressure() / 100.0F);
-  Serial.println(" hPa");
+  Serial.print(pressure);
+  Serial.println(" kPa");
 
   // WaveShare BME280
   Serial.println("\n==== BMP-280 =============");
@@ -639,7 +654,9 @@ void loop()
 
   // Publishes value to MQTT  
   int temp = (float)rtc.getTemperature();
-  int hty = (float)bme.readHumidity();
+  int bme_humidity = (float)bme.readHumidity();
+  int bme_temperature = (float)bme.readTemperature();
+  int bme_pressure = (float)bme.readPressure() / 100.0F;
   int min = now.minute();
   int r = random();
   int analogValue = analogRead(LIGHT_SENSOR_PIN);
@@ -649,11 +666,16 @@ void loop()
 
   // Mosquitto
   mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
+  mosquitto.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(bme_temperature, cstr, 10));
+  mosquitto.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(bme_pressure, cstr, 10));
+  mosquitto.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(bme_humidity, cstr, 10));
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "10");
   Serial.println("test_topic: 10");
   delay(1000);
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "3");
   Serial.println("test_topic: 3");
+  delay(1000);
+  
 #if !defined(__AVR)
 
 #else
@@ -672,7 +694,7 @@ void loop()
     delay(25);
   }
 
-  delay(1000);
+  
 }
 
 void printDirectory(File dir, int numTabs) {

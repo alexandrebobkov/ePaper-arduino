@@ -2,8 +2,9 @@
 
 const int chipSelect = SS;
 
-// Filename where logs are recorded to
-const char* logs_filename = "/logs.txt";
+// Filename where JSON logs are recorded to
+const char* logs_filename = "/data.txt";
+File file;
 
 void initSdCard() {
 
@@ -21,7 +22,7 @@ void initSdCard() {
         Serial.println("Wiring is correct and a card is present.");
     } 
     // print the type of card
-    Serial.println();
+    //Serial.println();
     Serial.print("Card type:         ");
     switch (SD.cardType()) {
         case CARD_NONE:
@@ -52,7 +53,7 @@ void initSdCard() {
 }
 
 void printFile (const char* filename) {
-    File file = SD.open(filename);
+    file = SD.open(filename);
     if (!file) {
         Serial.println(F("Failed to read file"));
         return;
@@ -69,12 +70,14 @@ void updateJson () {
 
     Serial.println("\n==== recorder.h Writing JSON file. ====");
 
-    DynamicJsonDocument jdoc(1024);
+    DynamicJsonDocument jdoc(2048);
     JsonObject obj;
 
-    File file = SD.open(logs_filename);
+    File file = SD.open(logs_filename, FILE_WRITE);
+    
     if (!file) {
-        Serial.println(F("Failed to create file"));
+    //if (!SD.exists(logs_filename)) {
+        Serial.println(F("File does not exist."));
         obj = jdoc.to<JsonObject>();
     }
     else {
@@ -91,7 +94,6 @@ void updateJson () {
             obj = jdoc.as<JsonObject>();
         }
     }
-
     file.close();
  
     obj[F("millis")] = millis();
@@ -99,28 +101,48 @@ void updateJson () {
     JsonArray data;
     // Check if exist the array
     if (!obj.containsKey(F("data"))) {
-        Serial.println(F("Not find data array! Crete one!"));
+        Serial.println(F("Not found data array! Creted one!"));
         data = obj.createNestedArray(F("data"));
     } else {
-        Serial.println(F("Find data array!"));
+        Serial.println(F("Found data array!"));
         data = obj[F("data")];
     }
+
+    JsonArray sensors;
+    if (!obj.containsKey(F("sensors"))) {
+        Serial.println(F("Not found sensors array! Creted one!"));
+        sensors = obj.createNestedArray(F("sensors"));
+    } else {
+        Serial.println(F("Found sensors array!"));
+        sensors = obj[F("sensors")];
+    }
+
  
     // create an object to add to the array
-    JsonObject objArrayData = data.createNestedObject();
- 
+    JsonObject objArrayData = data.createNestedObject(); 
     objArrayData["prevNumOfElem"] = data.size();
     objArrayData["newNumOfElem"] = data.size() + 1;
+
+    JsonObject objSensorsData = sensors.createNestedObject();
+    objSensorsData["Humidity"] = "26%";
+    objSensorsData["Temperature"] = "10";
+    objSensorsData["Pressure"] = "10";
  
     SD.remove(logs_filename);
  
     // Open file for writing
     file = SD.open(logs_filename, FILE_WRITE);
+    if (!file) {
+        Serial.println("Failed to create file");
+    }
+
+    file.println("Sensors values.");
  
-    // Serialize JSON to file
+    /*// Serialize JSON to file
     if (serializeJson(jdoc, file) == 0) {
         Serial.println(F("Failed to write to file"));
-    }
+        return;
+    }*/
  
     // Close the file
     file.close();
@@ -129,8 +151,11 @@ void updateJson () {
 }
 
 void displayImage (String file_path) {
-    File dir =  SD.open("/");
-    drawLogo(SD.open(file_path));
+    //File dir =  SD.open("/");
+    file = SD.open(file_path);
+    drawLogo(file);
+    file.close();
+    //SD.end();
     Serial.println("\n==== Logo Displayed ====");
 }
 
@@ -140,5 +165,3 @@ void displayUi () {
 void displayLogo () {
     displayImage("/picture-001.bmp");
 }
-
-
