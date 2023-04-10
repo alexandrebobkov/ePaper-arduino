@@ -473,67 +473,9 @@ void setup()
   
   temp = rtc.getTemperature();
 
-  //initSdCard();
-  Serial.println("Initializing SD card");
-  Serial.println("\n======================");
-    Serial.print("\nInitializing SD card..."); 
-
-    // Initialize SD library
-    if (!SD.begin(chipSelect)) {
-        Serial.println("initialization failed. Things to check:");
-        Serial.println("* is a card inserted?");
-        Serial.println("* is your wiring correct?");
-        Serial.println("* did you change the chipSelect pin to match your shield or module?");
-        while (1);
-    }
-    else {
-        Serial.println("Wiring is correct and a card is present.");
-    
-    // print the type of card
-    //Serial.println();
-        Serial.print("Card type:         ");
-        switch (SD.cardType()) {
-            case CARD_NONE:
-                Serial.println("NONE");
-                break;
-            case CARD_MMC:
-                Serial.println("MMC");
-                break;
-            case CARD_SD:
-                Serial.println("SD");
-                break;
-            case CARD_SDHC:
-                Serial.println("SDHC");
-            break;
-            default:
-                Serial.println("Unknown");
-        }
-        Serial.print("Card size:  ");
-        Serial.println((float)SD.cardSize()/1000); 
-        Serial.print("Total bytes: ");
-        Serial.println(SD.totalBytes()); 
-        Serial.print("Used bytes: ");
-        Serial.println(SD.usedBytes());
-
-        file = SD.open(logs_filename, FILE_WRITE);
-        if (!file) {
-            file.println("Time Stamp, Temperature (C), Humidity (%), Pressure (kPa)");
-        }
-        file.close();
-        
-    }   
-    //SD.close();
-    //SD.end();
-    Serial.println("\n==== SD Card Initialized ====");
-  //rec.initSdCard();
-  //Serial.println("calling rec.openFile()");
-  //f_rec = rec.openFile();
-  
-  //updateJson();  
-  //updateData();  
-  
+  rec.initSdCard();
   display.fillScreen(GxEPD_WHITE);
-  /*rec.displayImage("/ui-002.bmp");
+  rec.displayImage("/ui-002.bmp");
   //displayLogo();
   display.update();
   delay(5000);
@@ -541,11 +483,8 @@ void setup()
   rec.displayImage("/picture-001.bmp");
  // displayUi();
   display.update();
-  delay(5000);*/
+  delay(5000);
 
-
-
-  
 
   // Define switches pins
   pinMode(SWITCH_1,   OUTPUT);
@@ -737,33 +676,9 @@ void loop()
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "3");
   Serial.println("test_topic: 3");
   delay(1000);
-  // Append sensors values to a text file.
-  //initSdCard();
-  
-  //Serial.println("calling rec.openFile()");
-  //f_rec = rec.openFile();
-  Serial.println("Calling appendValues()");
-  //rec.appendValues(date, bme_temperature, bme_humidity, bme_pressure);
 
-  String data_string;
-  file = SD.open(logs_filename, FILE_APPEND);
-  if (!file) {
-            //if (!SD.exists(logs_filename)) {
-            Serial.println(F("File does not exist."));
-            file.println("Sensors values.");
-            file.println("Time | Sensor Value");
-        }
-        else {
-            Serial.println("Appending sensor values ...");
-            data_string = now.timestamp() + ", "
-            +String(bme_temperature) + "C, "
-            +String(bme_humidity) + "%, "
-            +String(bme_pressure) + "kPa";
-            file.print(millis()+", ");
-            file.println(data_string);
-        }
-        file.close(); 
-  //rec.closeFile(f_rec);
+  Serial.println("Appending sensors values ...\n");
+  rec.appendValues(date, bme_temperature, bme_humidity, bme_pressure);
   
 #if !defined(__AVR)
 
