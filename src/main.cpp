@@ -480,12 +480,10 @@ void setup()
   rec.initSdCard();
   display.fillScreen(GxEPD_WHITE);
   rec.displayImage("/ui-002.bmp");
-  //displayLogo();
   display.update();
   delay(5000);
   display.fillScreen(GxEPD_WHITE);
   rec.displayImage("/picture-001.bmp");
- // displayUi();
   display.update();
   delay(5000);
 
