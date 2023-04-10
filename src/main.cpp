@@ -3,7 +3,7 @@
     
   ePaper embeded system program written in style adopted for learning.
   Adopted & written by: Alexander Bobkov
-  Apr 9, 2023
+  Mar 11, 2023
 */
 
 #include "secrets.h"
@@ -86,6 +86,8 @@ char display_msg[4][50] = {"", "", "", ""};
 float temp = 0.0;
 float humidity = 0.0;
 float pressure = 0.0;
+
+File file;
 
 void printDirectory(File dir, int numTabs);
 //void drawLogo(File f);
@@ -426,8 +428,7 @@ void setup()
   Serial.println("setup done");
 
   // WaveShare BME280
-  unsigned status = bme.begin();//0x76); 
-  //unsigned status = bmp.begin();//0x76); 
+  unsigned status = bme.begin();
   if (!status) {
     Serial.println("Could not find a valid BME/BMP280 sensor, check wiring!");
     Serial.print("SensorID was: 0x"); Serial.println(bme.sensorID(),16);
@@ -473,8 +474,58 @@ void setup()
   temp = rtc.getTemperature();
 
   //initSdCard();
-  Serial.println("calling rec.initSD()");
-  f_rec = rec.initSdCard();
+  Serial.println("Initializing SD card");
+  Serial.println("\n======================");
+    Serial.print("\nInitializing SD card..."); 
+
+    // Initialize SD library
+    if (!SD.begin(chipSelect)) {
+        Serial.println("initialization failed. Things to check:");
+        Serial.println("* is a card inserted?");
+        Serial.println("* is your wiring correct?");
+        Serial.println("* did you change the chipSelect pin to match your shield or module?");
+        while (1);
+    }
+    else {
+        Serial.println("Wiring is correct and a card is present.");
+    
+    // print the type of card
+    //Serial.println();
+        Serial.print("Card type:         ");
+        switch (SD.cardType()) {
+            case CARD_NONE:
+                Serial.println("NONE");
+                break;
+            case CARD_MMC:
+                Serial.println("MMC");
+                break;
+            case CARD_SD:
+                Serial.println("SD");
+                break;
+            case CARD_SDHC:
+                Serial.println("SDHC");
+            break;
+            default:
+                Serial.println("Unknown");
+        }
+        Serial.print("Card size:  ");
+        Serial.println((float)SD.cardSize()/1000); 
+        Serial.print("Total bytes: ");
+        Serial.println(SD.totalBytes()); 
+        Serial.print("Used bytes: ");
+        Serial.println(SD.usedBytes());
+
+        file = SD.open(logs_filename, FILE_WRITE);
+        if (!file) {
+            file.println("Time Stamp, Temperature (C), Humidity (%), Pressure (kPa)");
+        }
+        file.close();
+        
+    }   
+    //SD.close();
+    //SD.end();
+    Serial.println("\n==== SD Card Initialized ====");
+  //rec.initSdCard();
   //Serial.println("calling rec.openFile()");
   //f_rec = rec.openFile();
   
@@ -568,7 +619,7 @@ void setup()
   xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);
   //info_ip_addr[16] = "000.000.000.000";
 
-  // Configure WiFiClientSecure to use the AWS IoT device credentials
+  /*// Configure WiFiClientSecure to use the AWS IoT device credentials
   net.setCACert(AWS_CERT_CA);
   net.setCertificate(AWS_CERT_CRT);
   net.setPrivateKey(AWS_CERT_PRIVATE);
@@ -598,7 +649,7 @@ void setup()
   client.subscribe(AWS_IOT_CHANNEL_3);
   client.subscribe(AWS_IOT_CHANNEL_4);
   client.subscribe(AWS_IOT_CHANNEL_5); 
-  Serial.println("AWS IoT Connected!");
+  Serial.println("AWS IoT Connected!");*/
 
   /**/
   // MOSQUITTO MQTT
@@ -692,7 +743,26 @@ void loop()
   //Serial.println("calling rec.openFile()");
   //f_rec = rec.openFile();
   Serial.println("Calling appendValues()");
-  rec.appendValues(f_rec, date, bme_temperature, bme_humidity, bme_pressure);
+  //rec.appendValues(date, bme_temperature, bme_humidity, bme_pressure);
+
+  String data_string;
+  file = SD.open(logs_filename, FILE_APPEND);
+  if (!file) {
+            //if (!SD.exists(logs_filename)) {
+            Serial.println(F("File does not exist."));
+            file.println("Sensors values.");
+            file.println("Time | Sensor Value");
+        }
+        else {
+            Serial.println("Appending sensor values ...");
+            data_string = now.timestamp() + ", "
+            +String(bme_temperature) + "C, "
+            +String(bme_humidity) + "%, "
+            +String(bme_pressure) + "kPa";
+            file.print(millis()+", ");
+            file.println(data_string);
+        }
+        file.close(); 
   //rec.closeFile(f_rec);
   
 #if !defined(__AVR)
