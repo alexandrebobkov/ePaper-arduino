@@ -226,6 +226,7 @@ void Task2code (void * parameters) {
         {
           i = 0;
           vTaskResume(Task3);
+          //vTaskResume(TaskSd);
         }
       // Blinkpattern: 3 quick flashes, pause
       // Task runs forever unless paused/terminated from outside
@@ -329,8 +330,7 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   display.print(itoa(pressure, p_cstr, 10));
   display.print(" kPa");
   
-  display.update();
-  //delay(5000);    
+  display.update(); 
 }
 
 // Display information on ePaper display.
@@ -369,6 +369,10 @@ void TaskConnection (void * parameters) {
     lan_addr.toCharArray(info_ip_addr, lan_addr.length()+1);
     vTaskSuspend(NULL);
   }
+}
+
+void TaskSdCode (void* parameters) {
+    vTaskSuspend(NULL);
 }
 
 void mosquito_callback (char* topic, byte* message, unsigned int length)
@@ -531,6 +535,7 @@ void setup()
   // Display information on ePaper display.
   //xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);  
   xTaskCreatePinnedToCore(LampTaskCode, "Lamp Task", 1000, NULL, 5, &LampTask, 0);
+  xTaskCreatePinnedToCore(TaskSdCode, "Sensors Task", 1000, NULL, 8, &TaskSd, 1);
   //xTaskCreatePinnedToCore(StorageCardcode, "Storage Card", 1000, NULL, 7, &StorageCard, 1);
 
   //xTaskCreatePinnedToCore(TaskConnection, "Connection", 1000, NULL, 3, &Connection, 1);
@@ -677,8 +682,8 @@ void loop()
   Serial.println("test_topic: 3");
   delay(1000);
 
-  Serial.println("Appending sensors values ...\n");
-  rec.appendValues(date, bme_temperature, bme_humidity, bme_pressure);
+  //Serial.println("Appending sensors values ...\n");
+  //rec.appendValues(date, bme_temperature, bme_humidity, bme_pressure);
   
 #if !defined(__AVR)
 
