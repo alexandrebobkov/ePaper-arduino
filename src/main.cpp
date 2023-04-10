@@ -3,7 +3,7 @@
     
   ePaper embeded system program written in style adopted for learning.
   Adopted & written by: Alexander Bobkov
-  Mar 11, 2023
+  Apr 9, 2023
 */
 
 #include "secrets.h"
