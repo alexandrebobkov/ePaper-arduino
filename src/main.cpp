@@ -272,7 +272,7 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   const char ip_addr[] = "121.21.10.20";
   //const char footer[] = "\nWireless\nAutomation Board\n\nControlled via Cloud";
   const char footer[] = "\nSensors and Variables";
-  const char message[] = "Command received: Relay 1 ON";
+  const char message[] = "MQTT CH-1: Relay 1 ON";
   
   //display.updateWindow(70,20,300,400,false);
   display.fillScreen(GxEPD_WHITE);
@@ -282,7 +282,7 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   display.setCursor(80, 20);
   display.println(header);
   display.setFont(&FreeMonoBold9pt7b);
-  display.print("Updated on: ");
+  //display.print("Updated: ");
   display.println(full_date);
   //display.setTextColor(GxEPD_LIGHTGREY);
   int x, y;
@@ -304,7 +304,7 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   //display.setFont(&FreeMonoBold9pt7b);
   display.print("IP: ");
   display.println(ip);
-  display.println(text);  
+  //display.println(text);  
   display.println(message);
   display.setTextColor(GxEPD_RED);
   display.setFont(&FreeMonoBold9pt7b);
