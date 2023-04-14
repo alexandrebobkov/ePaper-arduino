@@ -2,17 +2,6 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"path": "../esp32-bootstraps"
-		},
-		{
-			"name": "ESP32-Bootstrap",
-			"path": "../esp32-bootstrap/ESP32-Bootstrap"
-		},
-		{
-			"name": "ePaper-pico",
-			"path": "../../ePaper-pico"
 		}
 	],
 	"settings": {

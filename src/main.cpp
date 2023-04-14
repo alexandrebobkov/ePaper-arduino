@@ -77,7 +77,6 @@ const int output_1 = 22;//19;    // Pin 19 conflicts with ssd card module
 const int output_22 = 22;   // Pin 22
 const int output_23 = 21;*/
 int sensor_values[68];
-
 int sensor_val = 0;
 
 char aws_msg[25] = "";
@@ -86,6 +85,8 @@ char display_msg[4][50] = {"", "", "", ""};
 float temp = 0.0;
 float humidity = 0.0;
 float pressure = 0.0;
+
+String full_date;
 
 File file;
 
@@ -280,6 +281,8 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   display.setFont(f);
   display.setCursor(80, 20);
   display.println(header);
+  display.setFont(&FreeMonoBold9pt7b);
+  display.println(full_date);
   //display.setTextColor(GxEPD_LIGHTGREY);
   int x, y;
   int n = 0;
@@ -297,7 +300,7 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   Serial.println(n);
 
   //display.drawRect(2,250,298,148, GxEPD_RED);
-  display.setFont(&FreeMonoBold9pt7b);
+  //display.setFont(&FreeMonoBold9pt7b);
   display.print("IP: ");
   display.println(ip);
   display.println(text);  
@@ -613,6 +616,7 @@ void setup()
 void loop()
 {
   DateTime now = rtc.now();
+  full_date = now.timestamp();
   String date = now.timestamp();
   Serial.println(date);
   Serial.print(now.year(), DEC);
