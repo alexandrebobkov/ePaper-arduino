@@ -86,6 +86,15 @@ float temp = 0.0;
 float humidity = 0.0;
 float pressure = 0.0;
 
+// Publishes value to MQTT  
+int mqtt_temp;
+int bme_humidity;
+int bme_temperature;
+int bme_pressure;
+//int min;
+int r;
+char cstr[16];
+
 String full_date;
 
 File file;
@@ -250,6 +259,7 @@ void Task2code (void * parameters) {
 void LampTaskCode (void * parameters)
 {
   //int i = 0;
+  
   for (;;)
   {
     int analogValue = analogRead(LIGHT_SENSOR_PIN);
@@ -262,6 +272,63 @@ void LampTaskCode (void * parameters)
       digitalWrite(LED_PIN, HIGH);
       vTaskDelay(10000);
     }
+
+    DateTime now = rtc.now();
+    full_date = now.timestamp();
+    String date = now.timestamp();
+    Serial.println(date);
+    Serial.print(now.year(), DEC);
+    Serial.print('/');
+    Serial.print(now.month(), DEC);
+    Serial.print('/');
+    Serial.print(now.day(), DEC);
+    Serial.print(" (");
+    Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
+    Serial.print(") ");
+    Serial.print(now.hour(), DEC);
+    Serial.print(':');
+    Serial.print(now.minute(), DEC);
+  Serial.print(':');
+  Serial.print(now.second(), DEC);
+  /*Serial.println();
+  Serial.print("Temperature: ");
+  rtc_temp = rtc.getTemperature();
+  //Serial.println(rtc.getTemperature(), DEC);
+  Serial.println(rtc_temp, DEC);*/
+
+  // WaveShare BME280
+  Serial.println("\n==== BME-280 =============");
+  Serial.print("Temperature = ");
+  Serial.println(bme.readTemperature());
+  humidity = (float)bme.readHumidity();
+  Serial.print("Humidity = ");
+  //Serial.println(bme.readHumidity());
+  Serial.print(humidity);
+  Serial.println("%");
+  pressure = (float)bme.readPressure() / 100.0F;
+  Serial.print("Pressure = ");
+  Serial.print(pressure);
+  Serial.println(" kPa");
+
+  // WaveShare BME280
+  Serial.println("\n==== BMP-280 =============");
+  Serial.print("Temperature = ");
+  Serial.println(bmp.readTemperature());
+  Serial.print("Pressure = ");
+  Serial.print(bmp.readPressure() / 100.0F);
+  Serial.println(" hPa");
+
+  // Publishes value to MQTT  
+  temp = (float)rtc.getTemperature();
+  bme_humidity = (float)bme.readHumidity();
+  bme_temperature = (float)bme.readTemperature();
+  bme_pressure = (float)bme.readPressure() / 100.0F;
+  //min = now.minute();
+  r = random();
+  //int analogValue = analogRead(LIGHT_SENSOR_PIN);
+  
+
+
     vTaskDelay(1000);
   }
 }
@@ -616,7 +683,7 @@ void setup()
 
 void loop()
 {
-  DateTime now = rtc.now();
+  /*DateTime now = rtc.now();
   full_date = now.timestamp();
   String date = now.timestamp();
   Serial.println(date);
@@ -669,9 +736,9 @@ void loop()
   int min = now.minute();
   int r = random();
   int analogValue = analogRead(LIGHT_SENSOR_PIN);
-  char cstr[16];
-  client.publish(AWS_IOT_CHANNEL_5, itoa(min, cstr, 10));
-  client.publish(AWS_IOT_CHANNEL_5, itoa(temp, cstr, 10));
+  char cstr[16];*/
+  /*client.publish(AWS_IOT_CHANNEL_5, itoa(min, cstr, 10));
+  client.publish(AWS_IOT_CHANNEL_5, itoa(temp, cstr, 10));*/
 
   // Mosquitto
   mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
