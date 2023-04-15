@@ -9,16 +9,16 @@ const char* logs_filename = "/data.txt";
 
 class Recorder {
     public:
-        File initSdCard();
+        void initSdCard();
         File openFile();
         void closeFile(File f);
-        void appendValues(File f, String time, float temperature, float humidity, float pressure);
+        void appendValues(String time, float temperature, float humidity, float pressure);
         void displayImage (String file_path);
     private:
         File file;
 };
 
-File Recorder::initSdCard() {
+void Recorder::initSdCard() {
 
     Serial.println("\n======================");
     Serial.print("\nInitializing SD card..."); 
@@ -33,40 +33,43 @@ File Recorder::initSdCard() {
     }
     else {
         Serial.println("Wiring is correct and a card is present.");
-    } 
+    
     // print the type of card
     //Serial.println();
-    Serial.print("Card type:         ");
-    switch (SD.cardType()) {
-        case CARD_NONE:
-            Serial.println("NONE");
+        Serial.print("Card type:         ");
+        switch (SD.cardType()) {
+            case CARD_NONE:
+                Serial.println("NONE");
+                break;
+            case CARD_MMC:
+                Serial.println("MMC");
+                break;
+            case CARD_SD:
+                Serial.println("SD");
+                break;
+            case CARD_SDHC:
+                Serial.println("SDHC");
             break;
-        case CARD_MMC:
-            Serial.println("MMC");
-            break;
-        case CARD_SD:
-            Serial.println("SD");
-            break;
-        case CARD_SDHC:
-            Serial.println("SDHC");
-            break;
-        default:
-            Serial.println("Unknown");
-    }
-    Serial.print("Card size:  ");
-    Serial.println((float)SD.cardSize()/1000); 
-    Serial.print("Total bytes: ");
-    Serial.println(SD.totalBytes()); 
-    Serial.print("Used bytes: ");
-    Serial.println(SD.usedBytes());
+            default:
+                Serial.println("Unknown");
+        }
+        Serial.print("Card size:  ");
+        Serial.println((float)SD.cardSize()/1000); 
+        Serial.print("Total bytes: ");
+        Serial.println(SD.totalBytes()); 
+        Serial.print("Used bytes: ");
+        Serial.println(SD.usedBytes());
 
-    file = SD.open(logs_filename, FILE_APPEND);
-
-    // Remove previous json file
-    //SD.remove(logs_filename);
+        file = SD.open(logs_filename, FILE_WRITE);
+        if (!file) {
+            file.println("Time Stamp, Temperature (C), Humidity (%), Pressure (kPa)");
+            file.close();
+        }
+        
+    }   
+    //SD.close();
+    //SD.end();
     Serial.println("\n==== SD Card Initialized ====");
-
-    return file;
 }
 
 void printFile (File f, const char* filename) {
@@ -89,32 +92,46 @@ File Recorder::openFile() {
 void Recorder::closeFile(File f) {
     f.close();
 }
-void Recorder::appendValues(File f, String time, float temperature, float humidity, float pressure) {
+void Recorder::appendValues(String time, float temperature, float humidity, float pressure) {
     String data_string, temperature_s, humidity_s, pressure_s;
 
     //floatToString(temperature_s, temperature, 4);
     Serial.println("\n==== recorder.h Appending sensor values. ====");
+
+    // Initialize SD library
+    if (!SD.begin(chipSelect)) {
+        Serial.println("initialization failed. Things to check:");
+        Serial.println("* is a card inserted?");
+        Serial.println("* is your wiring correct?");
+        Serial.println("* did you change the chipSelect pin to match your shield or module?");
+        while (1);
+    }
+    else {
+        Serial.println("Wiring is correct and a card is present.");
+        file = SD.open(logs_filename, FILE_APPEND);
+
     //File file = SD.open(logs_filename, FILE_WRITE);
     //file = SD.open(logs_filename, FILE_APPEND);
     
-    if (!f) {
-    //if (!SD.exists(logs_filename)) {
-        Serial.println(F("File does not exist."));
-        f.println("Sensors values.");
-        f.println("Time | Sensor Value");
+        if (!file) {
+            //if (!SD.exists(logs_filename)) {
+            Serial.println(F("File does not exist."));
+            file.println("Sensors values.");
+            file.println("Time | Sensor Value");
+        }
+        else {
+            Serial.println("Appending sensor values ...");
+            data_string = time + ", "
+            +String(temperature) + "C, "
+            +String(humidity) + "%, "
+            +String(pressure) + "kPa";
+            file.print(millis()+", ");
+            file.println(data_string);
+            file.flush();
+        }
+        file.close();        
     }
-    else {
-        Serial.println("Appending sensor values ...");
-        data_string = time + ", "
-        +String(temperature) + "C, "
-        +String(humidity) + "%, "
-        +String(pressure) + "kPa";
-        f.println(data_string);
-        f.print("Time, ");
-        f.println(millis());
-        f.flush();
-    }
-    //file.close();
+    //SD.end();
 
     //printFile(logs_filename);
     //return true;

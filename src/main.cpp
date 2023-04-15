@@ -3,7 +3,7 @@
     
   ePaper embeded system program written in style adopted for learning.
   Adopted & written by: Alexander Bobkov
-  Apr 9, 2023
+  Mar 11, 2023
 */
 
 #include "secrets.h"
@@ -77,7 +77,6 @@ const int output_1 = 22;//19;    // Pin 19 conflicts with ssd card module
 const int output_22 = 22;   // Pin 22
 const int output_23 = 21;*/
 int sensor_values[68];
-
 int sensor_val = 0;
 
 char aws_msg[25] = "";
@@ -86,6 +85,19 @@ char display_msg[4][50] = {"", "", "", ""};
 float temp = 0.0;
 float humidity = 0.0;
 float pressure = 0.0;
+
+// Publishes value to MQTT  
+int mqtt_temp;
+int bme_humidity;
+int bme_temperature;
+int bme_pressure;
+//int min;
+int r;
+char cstr[16];
+
+String full_date;
+
+File file;
 
 void printDirectory(File dir, int numTabs);
 //void drawLogo(File f);
@@ -224,6 +236,7 @@ void Task2code (void * parameters) {
         {
           i = 0;
           vTaskResume(Task3);
+          //vTaskResume(TaskSd);
         }
       // Blinkpattern: 3 quick flashes, pause
       // Task runs forever unless paused/terminated from outside
@@ -246,6 +259,7 @@ void Task2code (void * parameters) {
 void LampTaskCode (void * parameters)
 {
   //int i = 0;
+  
   for (;;)
   {
     int analogValue = analogRead(LIGHT_SENSOR_PIN);
@@ -258,6 +272,63 @@ void LampTaskCode (void * parameters)
       digitalWrite(LED_PIN, HIGH);
       vTaskDelay(10000);
     }
+
+    /*DateTime now = rtc.now();
+    full_date = now.timestamp();
+    String date = now.timestamp();
+    Serial.println(date);
+    Serial.print(now.year(), DEC);
+    Serial.print('/');
+    Serial.print(now.month(), DEC);
+    Serial.print('/');
+    Serial.print(now.day(), DEC);
+    Serial.print(" (");
+    Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
+    Serial.print(") ");
+    Serial.print(now.hour(), DEC);
+    Serial.print(':');
+    Serial.print(now.minute(), DEC);
+    Serial.print(':');
+    Serial.print(now.second(), DEC);
+  /*Serial.println();
+  Serial.print("Temperature: ");
+  rtc_temp = rtc.getTemperature();
+  //Serial.println(rtc.getTemperature(), DEC);
+  Serial.println(rtc_temp, DEC);*/
+
+  // WaveShare BME280
+  /*Serial.println("\n==== BME-280 =============");
+  Serial.print("Temperature = ");
+  Serial.println(bme.readTemperature());
+  humidity = (float)bme.readHumidity();
+  Serial.print("Humidity = ");
+  //Serial.println(bme.readHumidity());
+  Serial.print(humidity);
+  Serial.println("%");
+  pressure = (float)bme.readPressure() / 100.0F;
+  Serial.print("Pressure = ");
+  Serial.print(pressure);
+  Serial.println(" kPa");
+
+  // WaveShare BME280
+  Serial.println("\n==== BMP-280 =============");
+  Serial.print("Temperature = ");
+  Serial.println(bmp.readTemperature());
+  Serial.print("Pressure = ");
+  Serial.print(bmp.readPressure() / 100.0F);
+  Serial.println(" hPa");
+
+  // Publishes value to MQTT  
+  temp = (float)rtc.getTemperature();
+  bme_humidity = (float)bme.readHumidity();
+  bme_temperature = (float)bme.readTemperature();
+  bme_pressure = (float)bme.readPressure() / 100.0F;
+  //min = now.minute();
+  r = random();
+  //int analogValue = analogRead(LIGHT_SENSOR_PIN);*/
+  
+
+
     vTaskDelay(1000);
   }
 }
@@ -268,7 +339,7 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   const char ip_addr[] = "121.21.10.20";
   //const char footer[] = "\nWireless\nAutomation Board\n\nControlled via Cloud";
   const char footer[] = "\nSensors and Variables";
-  const char message[] = "Command received:\nRelay 1 ON";
+  const char message[] = "MQTT CH-1: Relay 1 ON";
   
   //display.updateWindow(70,20,300,400,false);
   display.fillScreen(GxEPD_WHITE);
@@ -277,6 +348,9 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   display.setFont(f);
   display.setCursor(80, 20);
   display.println(header);
+  display.setFont(&FreeMonoBold9pt7b);
+  //display.print("Updated: ");
+  display.println(full_date);
   //display.setTextColor(GxEPD_LIGHTGREY);
   int x, y;
   int n = 0;
@@ -294,10 +368,10 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   Serial.println(n);
 
   //display.drawRect(2,250,298,148, GxEPD_RED);
-  display.setFont(&FreeMonoBold9pt7b);
+  //display.setFont(&FreeMonoBold9pt7b);
   display.print("IP: ");
   display.println(ip);
-  display.println(text);  
+  //display.println(text);  
   display.println(message);
   display.setTextColor(GxEPD_RED);
   display.setFont(&FreeMonoBold9pt7b);
@@ -327,8 +401,7 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   display.print(itoa(pressure, p_cstr, 10));
   display.print(" kPa");
   
-  display.update();
-  //delay(5000);    
+  display.update(); 
 }
 
 // Display information on ePaper display.
@@ -367,6 +440,10 @@ void TaskConnection (void * parameters) {
     lan_addr.toCharArray(info_ip_addr, lan_addr.length()+1);
     vTaskSuspend(NULL);
   }
+}
+
+void TaskSdCode (void* parameters) {
+    vTaskSuspend(NULL);
 }
 
 void mosquito_callback (char* topic, byte* message, unsigned int length)
@@ -426,8 +503,7 @@ void setup()
   Serial.println("setup done");
 
   // WaveShare BME280
-  unsigned status = bme.begin();//0x76); 
-  //unsigned status = bmp.begin();//0x76); 
+  unsigned status = bme.begin();
   if (!status) {
     Serial.println("Could not find a valid BME/BMP280 sensor, check wiring!");
     Serial.print("SensorID was: 0x"); Serial.println(bme.sensorID(),16);
@@ -472,29 +548,16 @@ void setup()
   
   temp = rtc.getTemperature();
 
-  //initSdCard();
-  Serial.println("calling rec.initSD()");
-  f_rec = rec.initSdCard();
-  //Serial.println("calling rec.openFile()");
-  //f_rec = rec.openFile();
-  
-  //updateJson();  
-  //updateData();  
-  
+  rec.initSdCard();
   display.fillScreen(GxEPD_WHITE);
-  /*rec.displayImage("/ui-002.bmp");
-  //displayLogo();
+  rec.displayImage("/ui-002.bmp");
   display.update();
   delay(5000);
   display.fillScreen(GxEPD_WHITE);
   rec.displayImage("/picture-001.bmp");
- // displayUi();
   display.update();
-  delay(5000);*/
+  delay(5000);
 
-
-
-  
 
   // Define switches pins
   pinMode(SWITCH_1,   OUTPUT);
@@ -541,6 +604,7 @@ void setup()
   // Display information on ePaper display.
   //xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);  
   xTaskCreatePinnedToCore(LampTaskCode, "Lamp Task", 1000, NULL, 5, &LampTask, 0);
+  xTaskCreatePinnedToCore(TaskSdCode, "Sensors Task", 1000, NULL, 8, &TaskSd, 1);
   //xTaskCreatePinnedToCore(StorageCardcode, "Storage Card", 1000, NULL, 7, &StorageCard, 1);
 
   //xTaskCreatePinnedToCore(TaskConnection, "Connection", 1000, NULL, 3, &Connection, 1);
@@ -568,7 +632,7 @@ void setup()
   xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);
   //info_ip_addr[16] = "000.000.000.000";
 
-  // Configure WiFiClientSecure to use the AWS IoT device credentials
+  /*// Configure WiFiClientSecure to use the AWS IoT device credentials
   net.setCACert(AWS_CERT_CA);
   net.setCertificate(AWS_CERT_CRT);
   net.setPrivateKey(AWS_CERT_PRIVATE);
@@ -598,7 +662,7 @@ void setup()
   client.subscribe(AWS_IOT_CHANNEL_3);
   client.subscribe(AWS_IOT_CHANNEL_4);
   client.subscribe(AWS_IOT_CHANNEL_5); 
-  Serial.println("AWS IoT Connected!");
+  Serial.println("AWS IoT Connected!");*/
 
   /**/
   // MOSQUITTO MQTT
@@ -620,6 +684,7 @@ void setup()
 void loop()
 {
   DateTime now = rtc.now();
+  full_date = now.timestamp();
   String date = now.timestamp();
   Serial.println(date);
   Serial.print(now.year(), DEC);
@@ -672,8 +737,8 @@ void loop()
   int r = random();
   int analogValue = analogRead(LIGHT_SENSOR_PIN);
   char cstr[16];
-  client.publish(AWS_IOT_CHANNEL_5, itoa(min, cstr, 10));
-  client.publish(AWS_IOT_CHANNEL_5, itoa(temp, cstr, 10));
+  /*client.publish(AWS_IOT_CHANNEL_5, itoa(min, cstr, 10));
+  client.publish(AWS_IOT_CHANNEL_5, itoa(temp, cstr, 10));*/
 
   // Mosquitto
   mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
@@ -682,18 +747,13 @@ void loop()
   mosquitto.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(bme_humidity, cstr, 10));
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "10");
   Serial.println("test_topic: 10");
-  delay(1000);
+  delay(250);
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "3");
   Serial.println("test_topic: 3");
-  delay(1000);
-  // Append sensors values to a text file.
-  //initSdCard();
-  
-  //Serial.println("calling rec.openFile()");
-  //f_rec = rec.openFile();
-  Serial.println("Calling appendValues()");
-  rec.appendValues(f_rec, date, bme_temperature, bme_humidity, bme_pressure);
-  //rec.closeFile(f_rec);
+  delay(250);
+
+  //Serial.println("Appending sensors values ...\n");
+  //rec.appendValues(date, bme_temperature, bme_humidity, bme_pressure);
   
 #if !defined(__AVR)
 
@@ -712,8 +772,6 @@ void loop()
     ledcWrite(0, d);
     delay(25);
   }
-
-  
 }
 
 void printDirectory(File dir, int numTabs) {
