@@ -273,7 +273,7 @@ void LampTaskCode (void * parameters)
       vTaskDelay(10000);
     }
 
-    DateTime now = rtc.now();
+    /*DateTime now = rtc.now();
     full_date = now.timestamp();
     String date = now.timestamp();
     Serial.println(date);
@@ -288,8 +288,8 @@ void LampTaskCode (void * parameters)
     Serial.print(now.hour(), DEC);
     Serial.print(':');
     Serial.print(now.minute(), DEC);
-  Serial.print(':');
-  Serial.print(now.second(), DEC);
+    Serial.print(':');
+    Serial.print(now.second(), DEC);
   /*Serial.println();
   Serial.print("Temperature: ");
   rtc_temp = rtc.getTemperature();
@@ -297,7 +297,7 @@ void LampTaskCode (void * parameters)
   Serial.println(rtc_temp, DEC);*/
 
   // WaveShare BME280
-  Serial.println("\n==== BME-280 =============");
+  /*Serial.println("\n==== BME-280 =============");
   Serial.print("Temperature = ");
   Serial.println(bme.readTemperature());
   humidity = (float)bme.readHumidity();
@@ -325,7 +325,7 @@ void LampTaskCode (void * parameters)
   bme_pressure = (float)bme.readPressure() / 100.0F;
   //min = now.minute();
   r = random();
-  //int analogValue = analogRead(LIGHT_SENSOR_PIN);
+  //int analogValue = analogRead(LIGHT_SENSOR_PIN);*/
   
 
 
@@ -683,7 +683,7 @@ void setup()
 
 void loop()
 {
-  /*DateTime now = rtc.now();
+  DateTime now = rtc.now();
   full_date = now.timestamp();
   String date = now.timestamp();
   Serial.println(date);
@@ -736,7 +736,7 @@ void loop()
   int min = now.minute();
   int r = random();
   int analogValue = analogRead(LIGHT_SENSOR_PIN);
-  char cstr[16];*/
+  char cstr[16];
   /*client.publish(AWS_IOT_CHANNEL_5, itoa(min, cstr, 10));
   client.publish(AWS_IOT_CHANNEL_5, itoa(temp, cstr, 10));*/
 
@@ -747,10 +747,10 @@ void loop()
   mosquitto.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(bme_humidity, cstr, 10));
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "10");
   Serial.println("test_topic: 10");
-  delay(1000);
+  delay(250);
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "3");
   Serial.println("test_topic: 3");
-  delay(1000);
+  delay(250);
 
   //Serial.println("Appending sensors values ...\n");
   //rec.appendValues(date, bme_temperature, bme_humidity, bme_pressure);
@@ -772,8 +772,6 @@ void loop()
     ledcWrite(0, d);
     delay(25);
   }
-
-  
 }
 
 void printDirectory(File dir, int numTabs) {
