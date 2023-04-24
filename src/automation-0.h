@@ -21,7 +21,7 @@
 
 
 // Define tasks.
-TaskHandle_t Task0;     // Dummy built-in LED blink cycle
+TaskHandle_t Task0, TaskLed;     // Dummy built-in LED blink cycle
 TaskHandle_t TaskWiFi;  // Task maintaining wireless connection
 TaskHandle_t TaskSd;    // Task to write sensors vlues to a file stored on SD card
 TaskHandle_t Task1, Task2, Task3, Task4, Task5;   // For prototyping purposes these tasks control LEDs based on received command
@@ -77,6 +77,22 @@ void Task0code (void * parameters) {
       vTaskDelay(250);
       digitalWrite(output_1, LOW);
       vTaskDelay(1500);                
+    }
+}
+// Dummy task for breathing LED
+void TaskLedCode (void * parameters) {
+    Serial.print("Task LED running on core # ");
+    Serial.println(xPortGetCoreID());
+
+    for (;;) {
+      for (int d = 20; d <= 255; d++) {
+        ledcWrite(0, d);
+        vTaskDelay(25/portTICK_RATE_MS);
+      }
+      for (int d = 255; d >= 20; d--) {
+        ledcWrite(0, d);
+        vTaskDelay(25/portTICK_RATE_MS);
+      }             
     }
 }
 
