@@ -201,22 +201,6 @@ void messageHandler(char* topic, byte* payload, unsigned int length)
   }
 }
 
-void Task1code (void * parameters) {
-    Serial.print("Task 1 running on core # ");
-    Serial.println(xPortGetCoreID());
-
-    for (;;) {
-      digitalWrite(output_1, HIGH);
-      vTaskDelay(250);
-      digitalWrite(output_1, LOW);
-      vTaskDelay(250);
-      digitalWrite(output_1, HIGH);
-      vTaskDelay(250);
-      digitalWrite(output_1, LOW);
-      vTaskDelay(1500);                
-    }
-}
-
 // Dummy task. Runs to blink built-in LED. Indicates that board has started
 void Task2code (void * parameters) {  
   Serial.print("Task 2 running on core # ");
@@ -597,7 +581,8 @@ void setup()
 
   // Create thread for task 1
   //xTaskCreatePinnedToCore(Task1code, "Task1", 1000, NULL, 2, &Task1, 0);
-  xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0);    
+  xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
+  xTaskCreatePinnedToCore(TaskLedCode, "Task LED", 1000, NULL, 3, &TaskLed, 0);    
   // Create thread for task 2
   xTaskCreatePinnedToCore(Task2code, "Task2", 1000, NULL, 1, &Task2, 1);  
   // Create thread for task 3
@@ -757,22 +742,10 @@ void loop()
   //rec.appendValues(date, bme_temperature, bme_humidity, bme_pressure);
   
 #if !defined(__AVR)
-
 #else
-
 #endif
   client.loop();
   mosquitto.loop();
-  for (int d = 20; d <= 255; d++)
-  {
-    ledcWrite(0, d);
-    delay(25);
-  }
-  for (int d = 255; d >= 20; d--)
-  {
-    ledcWrite(0, d);
-    delay(25);
-  }
 }
 
 void printDirectory(File dir, int numTabs) {
