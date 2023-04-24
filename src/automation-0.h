@@ -81,8 +81,12 @@ void Task0code (void * parameters) {
 }
 // Dummy task for breathing LED
 void TaskLedCode (void * parameters) {
+    int *sensor = (int*)parameters;
+
     Serial.print("Task LED running on core # ");
     Serial.println(xPortGetCoreID());
+    Serial.print("Value passed to a task: ");
+    Serial.println(*(int*)parameters);
 
     for (;;) {
       for (int d = 20; d <= 255; d++) {

@@ -582,7 +582,9 @@ void setup()
   // Create thread for task 1
   //xTaskCreatePinnedToCore(Task1code, "Task1", 1000, NULL, 2, &Task1, 0);
   xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
-  xTaskCreatePinnedToCore(TaskLedCode, "Task LED", 1000, NULL, 3, &TaskLed, 0);    
+  //xTaskCreatePinnedToCore(TaskLedCode, "Task LED", 1000, NULL, 3, &TaskLed, 0);
+  int sensor = 50;
+  xTaskCreatePinnedToCore(TaskLedCode, "Task LED", 1000, (void*)&sensor, 3, &TaskLed, 0);    
   // Create thread for task 2
   xTaskCreatePinnedToCore(Task2code, "Task2", 1000, NULL, 1, &Task2, 1);  
   // Create thread for task 3
