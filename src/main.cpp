@@ -486,6 +486,12 @@ void setup()
   display.init(115200); // enable diagnostic output on Serial
   Serial.println("setup done");
 
+  xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
+  pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(LED_PIN_OVERRIDE, OUTPUT);
+  attachInterrupt(PUSH_BUTTON_PIN, button_isr_handler, FALLING);
+  digitalWrite(LED_PIN_OVERRIDE, led_status);
+
   // WaveShare BME280
   unsigned status = bme.begin();
   if (!status) {
@@ -581,7 +587,9 @@ void setup()
 
   // Create thread for task 1
   //xTaskCreatePinnedToCore(Task1code, "Task1", 1000, NULL, 2, &Task1, 0);
-  xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
+  
+  //xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
+  
   //xTaskCreatePinnedToCore(TaskLedCode, "Task LED", 1000, NULL, 3, &TaskLed, 0);
   int sensor = 50;
   xTaskCreatePinnedToCore(TaskLedCode, "Task LED", 1000, (void*)&sensor, 3, &TaskLed, 0);    
