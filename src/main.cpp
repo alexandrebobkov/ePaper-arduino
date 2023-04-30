@@ -526,7 +526,7 @@ void setup()
   
   
   // Uncomment when compiling for the first time
-  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   /*if (rtc.lostPower()) {
     Serial.println("RTC lost power, lets set the time!");
     // following line sets the RTC to the date &amp; time this sketch was compiled
