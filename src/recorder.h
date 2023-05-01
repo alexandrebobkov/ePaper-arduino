@@ -63,8 +63,9 @@ void Recorder::initSdCard() {
         file = SD.open(logs_filename, FILE_WRITE);
         if (!file) {
             file.println("Time Stamp, Temperature (C), Humidity (%), Pressure (kPa)");
-            file.close();
+            //file.close();
         }
+        file.close();
         
     }   
     //SD.close();

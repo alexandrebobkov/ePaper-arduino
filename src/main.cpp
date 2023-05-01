@@ -318,7 +318,8 @@ void LampTaskCode (void * parameters)
 }
 
 void showUpdate(char ip[], const char text[], const GFXfont* f) {
-  const char header[25] = "Networks IV\n"; 
+  //const char header[25] = "Networks IV\n";
+  const char header[25] = "Workdesk Automation\n"; 
   //const char ip[25] = "IP: 10.100.50.20";
   const char ip_addr[] = "121.21.10.20";
   //const char footer[] = "\nWireless\nAutomation Board\n\nControlled via Cloud";
@@ -330,7 +331,7 @@ void showUpdate(char ip[], const char text[], const GFXfont* f) {
   display.setTextColor(GxEPD_BLACK);
   display.setTextColor(GxEPD_DARKGREY); //
   display.setFont(f);
-  display.setCursor(80, 20);
+  display.setCursor(10, 20);
   display.println(header);
   display.setFont(&FreeMonoBold9pt7b);
   //display.print("Updated: ");
@@ -484,13 +485,17 @@ void setup()
   Serial.println();
   Serial.println("setup");  
   display.init(115200); // enable diagnostic output on Serial
+  /*Serial.println("GxEPD_WHITE");
+  display.fillScreen(GxEPD_WHITE);
+  display.update();
+  //display.eraseDisplay();*/
   Serial.println("setup done");
 
-  xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
-  pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
+  //xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
+  /*pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
   pinMode(LED_PIN_OVERRIDE, OUTPUT);
   attachInterrupt(PUSH_BUTTON_PIN, button_isr_handler, FALLING);
-  digitalWrite(LED_PIN_OVERRIDE, led_status);
+  digitalWrite(LED_PIN_OVERRIDE, led_status);*/
 
   // WaveShare BME280
   unsigned status = bme.begin();
@@ -537,15 +542,27 @@ void setup()
   }*/
   
   temp = rtc.getTemperature();
+  //Serial.println("GxEPD_WHITE");
+  //display.fillScreen(GxEPD_WHITE);
+  //delay(500);
 
+  Serial.println("1");
   rec.initSdCard();
+  Serial.println("2");
   display.fillScreen(GxEPD_WHITE);
+  Serial.println("3");
   rec.displayImage("/ui-002.bmp");
+  Serial.println("4");
   display.update();
+  Serial.println("5");
   delay(5000);
+  Serial.println("6");
   display.fillScreen(GxEPD_WHITE);
+  Serial.println("7");
   rec.displayImage("/picture-001.bmp");
+  Serial.println("8");
   display.update();
+  Serial.println("9");
   delay(5000);
 
 
@@ -591,8 +608,11 @@ void setup()
   //xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
   
   //xTaskCreatePinnedToCore(TaskLedCode, "Task LED", 1000, NULL, 3, &TaskLed, 0);
+  xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
+  
   int sensor = 50;
-  xTaskCreatePinnedToCore(TaskLedCode, "Task LED", 1000, (void*)&sensor, 3, &TaskLed, 0);    
+  xTaskCreatePinnedToCore(TaskLedCode, "Task LED", 1000, (void*)&sensor, 3, &TaskLed, 0);
+
   // Create thread for task 2
   xTaskCreatePinnedToCore(Task2code, "Task2", 1000, NULL, 1, &Task2, 1);  
   // Create thread for task 3

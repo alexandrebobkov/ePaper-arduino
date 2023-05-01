@@ -17,9 +17,9 @@
 #define SWITCH_2 27   // GPIO 27; PHYSICAL PIN # 10
 //#define SWITCH_1 7  PIN 7 SAUSES STALLS
 
-#define ESP_INR_FLAG_DEFAULT 0
+/*#define ESP_INR_FLAG_DEFAULT 0
 #define LED_PIN_OVERRIDE 27
-#define PUSH_BUTTON_PIN 33
+#define PUSH_BUTTON_PIN 33*/
 
 
 
@@ -44,7 +44,7 @@ const int output_23 = 21;
 
 bool led_status = false;
 
-void IRAM_ATTR button_isr_handler () {
+/*void IRAM_ATTR button_isr_handler () {
   xTaskResumeFromISR(LED_OVERRIDE);
 }
 void interrupt_task (void* arg) {
@@ -55,7 +55,7 @@ void interrupt_task (void* arg) {
     //gpio_set_level(LED_PIN_OVERRIDE, led_status);
     digitalWrite(LED_PIN_OVERRIDE, led_status);
   }
-}
+}*/
 
 void mqtt_message_handler (char* topic, byte* message, unsigned int length)
 {
