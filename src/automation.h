@@ -15,12 +15,10 @@ class Automation {
         const int switch_2 = 27;      // GPIO 27; PHYSICAL PIN # 10
 
         TaskHandle_t idle_task;
-        void IdleTaskCode(void * parameters);
 
     public:
         Automation();
         void init();
-
         void SetOutput(int pin, boolean level);
 
 };

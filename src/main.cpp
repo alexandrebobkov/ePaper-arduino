@@ -59,6 +59,7 @@ Adafruit_BME280 bme;
 //ErriezDS3231 rtc;
 
 Recorder rec;
+Automation automation;
 File f_rec;
 
 // BMP280
