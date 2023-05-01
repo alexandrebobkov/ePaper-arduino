@@ -17,6 +17,10 @@
 #define SWITCH_2 27   // GPIO 27; PHYSICAL PIN # 10
 //#define SWITCH_1 7  PIN 7 SAUSES STALLS
 
+/*#define ESP_INR_FLAG_DEFAULT 0
+#define LED_PIN_OVERRIDE 27
+#define PUSH_BUTTON_PIN 33*/
+
 
 
 
@@ -27,15 +31,31 @@ TaskHandle_t TaskSd;    // Task to write sensors vlues to a file stored on SD ca
 TaskHandle_t Task1, Task2, Task3, Task4, Task5;   // For prototyping purposes these tasks control LEDs based on received command
 TaskHandle_t LampTask, StorageCard, Connection;
 
+// Interrupt for push button
+TaskHandle_t LED_OVERRIDE = NULL;
+
 WiFiClientSecure wifi_conn = WiFiClientSecure();
 
-    // Define output pins
-    const int output_2  = 2;//4;    // built-in LED pin 
-    const int output_1  = 22;//19;  // Pin 19 conflicts with ssd card module
-    const int output_22 = 22; 
-    const int output_23 = 21;
+// Define output pins
+const int output_2  = 2;//4;    // built-in LED pin 
+const int output_1  = 22;//19;  // Pin 19 conflicts with ssd card module
+const int output_22 = 22; 
+const int output_23 = 21;
 
+bool led_status = false;
 
+/*void IRAM_ATTR button_isr_handler () {
+  xTaskResumeFromISR(LED_OVERRIDE);
+}
+void interrupt_task (void* arg) {
+  led_status = false;
+  while (true) {
+    vTaskSuspend(NULL);
+    led_status = !led_status;
+    //gpio_set_level(LED_PIN_OVERRIDE, led_status);
+    digitalWrite(LED_PIN_OVERRIDE, led_status);
+  }
+}*/
 
 void mqtt_message_handler (char* topic, byte* message, unsigned int length)
 {
@@ -81,8 +101,12 @@ void Task0code (void * parameters) {
 }
 // Dummy task for breathing LED
 void TaskLedCode (void * parameters) {
+    int *sensor = (int*)parameters;
+
     Serial.print("Task LED running on core # ");
     Serial.println(xPortGetCoreID());
+    Serial.print("Value passed to a task: ");
+    Serial.println(*(int*)parameters);
 
     for (;;) {
       for (int d = 20; d <= 255; d++) {
