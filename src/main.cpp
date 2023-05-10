@@ -59,6 +59,7 @@ Adafruit_BME280 bme;
 //ErriezDS3231 rtc;
 
 Recorder rec;
+Automation automation;
 File f_rec;
 
 // BMP280
@@ -238,7 +239,7 @@ void Task2code (void * parameters) {
       digitalWrite(output_2, LOW);
       vTaskDelay(1500);
     }
-} 
+}
 
 void LampTaskCode (void * parameters)
 {
@@ -492,6 +493,9 @@ void setup()
   Serial.println("setup done");
 
   //xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
+  
+
+  //xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
   /*pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
   pinMode(LED_PIN_OVERRIDE, OUTPUT);
   attachInterrupt(PUSH_BUTTON_PIN, button_isr_handler, FALLING);
@@ -605,16 +609,17 @@ void setup()
   // Create thread for task 1
   //xTaskCreatePinnedToCore(Task1code, "Task1", 1000, NULL, 2, &Task1, 0);
   
-  //xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
+  xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
   
   //xTaskCreatePinnedToCore(TaskLedCode, "Task LED", 1000, NULL, 3, &TaskLed, 0);
-  xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
+  //xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
   
   int sensor = 50;
   xTaskCreatePinnedToCore(TaskLedCode, "Task LED", 1000, (void*)&sensor, 3, &TaskLed, 0);
 
   // Create thread for task 2
-  xTaskCreatePinnedToCore(Task2code, "Task2", 1000, NULL, 1, &Task2, 1);  
+  xTaskCreatePinnedToCore(Task2code, "Task2", 1000, NULL, 1, &Task2, 1); 
+
   // Create thread for task 3
   //xTaskCreatePinnedToCore(TaskScreen, "Task3", 1000, NULL, 5, &Task3, 1);
   // Display information on ePaper display.
