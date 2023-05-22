@@ -644,6 +644,7 @@ void setup()
     Serial.print(".");
   }
   Serial.print("\nCONNECTED\nIP: ");
+  
   Serial.println(WiFi.localIP());
   // Update IP address for displaying.
   String lan_addr = WiFi.localIP().toString();
