@@ -502,7 +502,7 @@ void setup()
   digitalWrite(LED_PIN_OVERRIDE, led_status);*/
 
   // WaveShare BME280
-  unsigned status = bme.begin();
+  unsigned status = bme.begin(); 
   if (!status) {
     Serial.println("Could not find a valid BME/BMP280 sensor, check wiring!");
     Serial.print("SensorID was: 0x"); Serial.println(bme.sensorID(),16);
@@ -644,6 +644,7 @@ void setup()
     Serial.print(".");
   }
   Serial.print("\nCONNECTED\nIP: ");
+  
   Serial.println(WiFi.localIP());
   // Update IP address for displaying.
   String lan_addr = WiFi.localIP().toString();
