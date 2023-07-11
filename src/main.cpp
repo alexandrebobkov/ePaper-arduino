@@ -632,10 +632,12 @@ void setup()
   //xTaskCreatePinnedToCore(TaskConnection, "Connection", 1000, NULL, 3, &Connection, 1);
   
 
-  WiFi.mode(WIFI_STA);
+  
   String hostname = "ESP32LF";
+  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
   WiFi.setHostname(hostname.c_str());
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  WiFi.mode(WIFI_STA);
   
   Serial.println("Connecting to Wi-Fi ...");
   
