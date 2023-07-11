@@ -45,6 +45,7 @@
 struct Data {
   const char* temp;
   const int* v;
+  int * humidity;
 };
 
 // Define tasks.
