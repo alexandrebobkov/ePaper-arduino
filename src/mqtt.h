@@ -11,7 +11,6 @@
 #define AWS_IOT_CHANNEL_5 "iot/ch5"
 
 // MQTT Mosquitto
-
 #define MQTT_IOT_CHANNEL_TEMPERATURE "esp32/sensors/temperature"
 #define MQTT_IOT_CHANNEL_PRESSURE "esp32/sensors/pressure"
 #define MQTT_IOT_CHANNEL_HUMIDITY "esp32/sensors/humidity"

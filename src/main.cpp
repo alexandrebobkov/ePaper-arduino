@@ -6,11 +6,13 @@
   July 28, 2023
 */
 
-// Define modules
+// Uncomment modules as required
 //#define RTC
 #define MICRO_SD
-#define BMP280
-//#define BME280
+#define BMP280      // Adafruit BMP280; temp & pressure
+//#define BME280    // Generic BME280; temp, pressure & humidity
+//#define MQTT_SSL
+#define MQTT
 
 #include "secrets.h"
 #include <WiFi.h>
@@ -34,6 +36,7 @@
 #include <SPI.h>
 //#include <Adafruit_GFX.h>
 
+// Include libraries based on modules selected
 #ifdef RTC
 #include <RTClib.h>
 #endif
@@ -56,11 +59,11 @@
 //#include "recorder.h"
 
 
-struct Data {
-  const char* temp;
-  const int* v;
-  int * humidity;
-};
+struct {
+  float humidity = 0.0;
+  float pressure = 0.0;
+  float temperature = 0.0;
+} sensors_values;
 
 
 
@@ -128,8 +131,14 @@ WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
 
 // Mosquitto
+#ifdef MQTT
 WiFiClient espClient;
 PubSubClient mosquitto(espClient);
+#endif
+#ifdef MQTT_SSL
+WiFiClientSecure espClientSSL = WiFiClientSecure();
+PubSubClient mosquitto_ssl(espClientSSL);
+#endif
 
 // Section of code that processes JSON command(s) received from AWS IoT
 /*void messageHandler(char* topic, byte* payload, unsigned int length)
@@ -482,14 +491,21 @@ void mosquito_callback (char* topic, byte* message, unsigned int length)
   }
 }
 
+// set the callback function
 void setupMQTT() {
-  mosquitto.setServer(mqtt_server, 1883);
-  // set the callback function
-  mosquitto.setCallback(mosquito_callback);
+  #ifdef MQTT
+    mosquitto.setServer(mqtt_server, 1883);
+    mosquitto.setCallback(mosquito_callback);
+  #endif
+  #ifdef MQTT_SSL
+    mosquitto_ssl.setServer(mqtt_server, 8883);
+    mosquitto_ssl.setCallback(mosquito_callback);
+  #endif
 }
 
 void reconnect()
 {
+  #ifdef MQTT
   while (!mosquitto.connected())
   {
     if (mosquitto.connect("ESP32Client"))
@@ -498,12 +514,27 @@ void reconnect()
       mosquitto.subscribe("esp32/output");
     }
   }
+  #endif
+  #ifdef MQTT_SSL
+  while (!mosquitto_ssl.connected())
+  {
+    if (mosquitto_ssl.connect("ESP32Client"))
+    {
+      Serial.println("connected");
+      mosquitto_ssl.subscribe("esp32/output");
+    }
+  }
+  #endif
 }
 
 void setup()
 {
   Serial.begin(115200);
   Serial.println();
+  sensors_values.humidity = 0.0;
+  sensors_values.pressure = 0.0;
+  sensors_values.temperature = 0.0;
+
   Serial.println("setup");  
   Serial.println("setup done");
 
@@ -534,6 +565,7 @@ void setup()
     Serial.println(bmp.sensorID(),16);
     while (1);
   }
+  else {}
   #endif
 
   // Initialize RTC module, if defined
@@ -570,23 +602,39 @@ void setup()
     delay(500);
     Serial.print(".");
   }
-  Serial.print("\nCONNECTED\nIP: ");
-  
+  Serial.print("\nCONNECTED\nIP: ");  
   Serial.println(WiFi.localIP());
   
-  // MOSQUITTO MQTT
+  // MOSQUITTO MQTT port 1883
   Serial.println("Connecting to Mosquitto");
-  //mosquitto.publish(MQTT_IOT_CHANNEL_0, "HI");
-  mosquitto.setServer(mqtt_server, 1883);
-  mosquitto.setCallback(mosquito_callback);
-  if(mosquitto.connect("ESP32")) {
-    Serial.println("Mosquitto Connected!");
-    mosquitto.subscribe("esp32/output");
+  #ifdef MQTT
+    mosquitto.setServer(mqtt_server, 1883);
     mosquitto.setCallback(mosquito_callback);
-  }
-  else
-    Serial.print("Mosquitto state: ");
+    if(mosquitto.connect("ESP32")) {
+      Serial.println("Mosquitto Connected!");
+      mosquitto.subscribe("esp32/output");
+      mosquitto.setCallback(mosquito_callback);
+    }
+    else
+      Serial.print("Mosquitto state: ");
     Serial.println(mosquitto.state());
+  #endif
+  #ifdef MQTT_SSL
+    mosquitto_ssl.setServer(mqtt_server, 8883);
+    espClientSSL.setCACert(NODE_CERT_CA);
+    espClientSSL.setCertificate(NODE_CERT_CRT);
+    espClientSSL.setPrivateKey(NODE_CERT_PRIVATE);
+    mosquitto_ssl.setCallback(mosquito_callback);
+    if(mosquitto_ssl.connect("ESP32")) {
+      Serial.println("Mosquitto Connected!");
+      mosquitto_ssl.subscribe("esp32/output");
+      mosquitto_ssl.setCallback(mosquito_callback);
+    }
+    else
+      Serial.print("Mosquitto state: ");
+    Serial.println(mosquitto_ssl.state());
+  #endif
+  
 }
 
 
@@ -643,31 +691,27 @@ void loop()
   #endif
 
   // WaveShare BMP280
+  // Save sensors values into data struct
   #ifdef BMP280
   Serial.println("\n==== BMP-280 =============");
-  Serial.print("Temperature = ");
-  Serial.println(bmp.readTemperature());
-  Serial.print("Pressure = ");
-  Serial.print(bmp.readPressure() / 100.0F);
-  Serial.println(" hPa");
+  sensors_values.temperature = (float)bmp.readTemperature();
+  sensors_values.pressure = (float)bmp.readPressure();
   #endif
 
-  Serial.println("\n==== MQTT =============");
-  // Publishes value to MQTT  
-  /*
-  int temp = (float)rtc.getTemperature();
-  int bme_humidity = (float)bme.readHumidity();
-  int bme_temperature = (float)bme.readTemperature();
-  int bme_pressure = (float)bme.readPressure() / 100.0F;
-  */
- 
-  
+  // Display sensors values
+  Serial.print("Temperature = ");
+  Serial.println(sensors_values.temperature);
+  Serial.print("Pressure = ");
+  Serial.print(sensors_values.pressure / 100.0F);
+  Serial.println(" Pa");
 
-  // Mosquitto
-  mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
-  mosquitto.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(temperature, cstr, 10));
-  mosquitto.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(pressure, cstr, 10));
-  mosquitto.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(humidity, cstr, 10));
+  // Mosquitto MQTT
+  #ifdef MQTT
+  Serial.println("\n==== MQTT =============");
+  //mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
+  mosquitto.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(sensors_values.temperature, cstr, 10));
+  mosquitto.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(sensors_values.pressure / 100.0F, cstr, 10));
+  mosquitto.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(sensors_values.humidity, cstr, 10));
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "10");
   Serial.println("test_topic: 10");
   delay(500);
@@ -677,5 +721,25 @@ void loop()
   delay(500);
   client.loop();
   mosquitto.loop();
+  #endif
+  #ifdef MQTT_SSL
+  Serial.println("\n==== MQTT SSL =============");
+  //mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
+  mosquitto_ssl.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(sensors_values.temperature, cstr, 10));
+  mosquitto_ssl.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(sensors_values.pressure / 100.0F, cstr, 10));
+  mosquitto_ssl.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(sensors_values.humidity, cstr, 10));
+  mosquitto_ssl.publish(MQTT_IOT_CHANNEL_0, "10");
+  Serial.println("test_topic: 10");
+  delay(500);
+  mosquitto_ssl.publish(MQTT_IOT_CHANNEL_0, "3");
+  Serial.println("test_topic: 3");
+
+  Serial.println(mosquitto_ssl.state());
+  delay(500);
+  client.loop();
+  mosquitto_ssl.loop();
+  #endif
+
+  
 }
 
