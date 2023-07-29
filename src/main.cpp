@@ -9,7 +9,7 @@
 // Define modules
 #define RTC
 #define MICRO_SD
-#define BMP280
+//#define BMP280
 #define BME280
 
 #include "secrets.h"
@@ -102,6 +102,7 @@ char display_msg[4][50] = {"", "", "", ""};
 float temp = 0.0;
 float humidity = 0.0;
 float pressure = 0.0;
+float temperature = 0.0;
 
 // Publishes value to MQTT  
 int mqtt_temp;
@@ -110,9 +111,9 @@ int bme_humidity;
 int bme_temperature;
 int bme_pressure;
 */
-int humidity;
+/*int humidity;
 int temperature;
-int pressure;
+int pressure;*/
 
 //int min;
 int r;
@@ -511,7 +512,7 @@ void setup()
   unsigned status = bme.begin(); 
   if (!status) {
     Serial.println("Could not find a valid BME/BMP280 sensor, check wiring!");
-    Serial.print("SensorID was: 0x"); Serial.println(bme.sensorID(),16);
+    Serial.print("SensorID was: 0x"); Serial.println(bme.sensorID());//,16);
     Serial.print("   ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
     Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
     Serial.print("   ID of 0x60 represents a BME 280.\n");
@@ -524,15 +525,15 @@ void setup()
   }
   #endif
 
-  #ifdef BMP280
   // BMP280
-  /*unsigned status_bmp280;
+  #ifdef BMP280  
+  unsigned status_bmp280;
   status_bmp280 = bmp.begin();
   if (!status_bmp280) {
     Serial.println("Could not find BMP280");
     Serial.println(bme.sensorID(),16);
     while (1);
-  }*/
+  }
   #endif
 
   // Initialize RTC module, if defined
@@ -632,23 +633,6 @@ void loop()
   Serial.print("Pressure = ");
   Serial.print(pressure);
   Serial.println(" kPa");
-
-  // WaveShare BME280
-  Serial.println("\n==== BMP-280 =============");
-  Serial.print("Temperature = ");
-  Serial.println(bmp.readTemperature());
-  Serial.print("Pressure = ");
-  Serial.print(bmp.readPressure() / 100.0F);
-  Serial.println(" hPa");
-
-  Serial.println("\n==== MQTT =============");
-  // Publishes value to MQTT  
-  /*
-  int temp = (float)rtc.getTemperature();
-  int bme_humidity = (float)bme.readHumidity();
-  int bme_temperature = (float)bme.readTemperature();
-  int bme_pressure = (float)bme.readPressure() / 100.0F;
-  */
   int temp = (float)rtc.getTemperature();
   humidity = (float)bme.readHumidity();
   temperature = (float)bme.readTemperature();
@@ -658,6 +642,27 @@ void loop()
   int analogValue = analogRead(LIGHT_SENSOR_PIN);
   char cstr[16];
   #endif
+
+  // WaveShare BME280
+  #ifdef BMP280
+  Serial.println("\n==== BMP-280 =============");
+  Serial.print("Temperature = ");
+  Serial.println(bmp.readTemperature());
+  Serial.print("Pressure = ");
+  Serial.print(bmp.readPressure() / 100.0F);
+  Serial.println(" hPa");
+  #endif
+
+  Serial.println("\n==== MQTT =============");
+  // Publishes value to MQTT  
+  /*
+  int temp = (float)rtc.getTemperature();
+  int bme_humidity = (float)bme.readHumidity();
+  int bme_temperature = (float)bme.readTemperature();
+  int bme_pressure = (float)bme.readPressure() / 100.0F;
+  */
+ 
+  
 
   // Mosquitto
   mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
