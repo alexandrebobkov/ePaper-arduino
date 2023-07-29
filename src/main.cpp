@@ -10,7 +10,7 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>             // ESP32 library
 #include <PubSubClient.h>
-//#include <ArduinoJson.h>
+#include <ArduinoJson.h>
 //#include "WiFi.h"
 //#include <WiFi.h>
 //#include <Wire.h> 
@@ -103,9 +103,6 @@ char cstr[16];
 
 String full_date;
 
-File file;
-
-void printDirectory(File dir, int numTabs);
 //void drawLogo(File f);
 
 //AWSIoT
