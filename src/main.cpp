@@ -539,7 +539,7 @@ void setup()
     // January 21, 2014 at 3am you would call:
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
   }*/
-    
+
   String hostname = "ESP32LF";
   WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
   WiFi.setHostname(hostname.c_str());
@@ -556,47 +556,7 @@ void setup()
   Serial.print("\nCONNECTED\nIP: ");
   
   Serial.println(WiFi.localIP());
-  // Update IP address for displaying.
-  String lan_addr = WiFi.localIP().toString();
-  lan_addr.toCharArray(info_ip_addr, lan_addr.length()+1);
-
-  // Call Task to display information on ePaper display.
-  xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);
-  //info_ip_addr[16] = "000.000.000.000";
-
-  /*// Configure WiFiClientSecure to use the AWS IoT device credentials
-  net.setCACert(AWS_CERT_CA);
-  net.setCertificate(AWS_CERT_CRT);
-  net.setPrivateKey(AWS_CERT_PRIVATE);
- 
-  //client.publish(AWS_IOT_CHANNEL_5, "10");
-  // Connect to the MQTT broker on the AWS endpoint we defined earlier
-  client.setServer(AWS_IOT_ENDPOINT, 8883);
-  //client.setServer(AWS_IOT_ENDPOINT, 443);
- 
-  // Create a message handler
-  client.setCallback(messageHandler);
-  Serial.println("Connecting to AWS IoT"); 
-  while (!client.connect(THINGNAME))
-  {
-    Serial.print(".");
-    delay(100);
-  }
- 
-  if (!client.connected())
-  {
-    Serial.println("AWS IoT Timeout!");
-    return;
-  } 
-  // AWS IoT Subscribe to a topic
-  client.subscribe(AWS_IOT_CHANNEL_1);
-  client.subscribe(AWS_IOT_CHANNEL_2);
-  client.subscribe(AWS_IOT_CHANNEL_3);
-  client.subscribe(AWS_IOT_CHANNEL_4);
-  client.subscribe(AWS_IOT_CHANNEL_5); 
-  Serial.println("AWS IoT Connected!");*/
-
-  /**/
+  
   // MOSQUITTO MQTT
   Serial.println("Connecting to Mosquitto");
   //mosquitto.publish(MQTT_IOT_CHANNEL_0, "HI");
@@ -616,6 +576,7 @@ void setup()
 
 void loop()
 {
+  #ifdef RTC
   DateTime now = rtc.now();
   full_date = now.timestamp();
   String date = now.timestamp();
@@ -638,7 +599,9 @@ void loop()
   temp = rtc.getTemperature();
   //Serial.println(rtc.getTemperature(), DEC);
   Serial.println(temp, DEC);
+  #endif
 
+  #ifdef BME280
   // WaveShare BME280
   Serial.println("\n==== BME-280 =============");
   Serial.print("Temperature = ");
@@ -673,6 +636,7 @@ void loop()
   char cstr[16];
   /*client.publish(AWS_IOT_CHANNEL_5, itoa(min, cstr, 10));
   client.publish(AWS_IOT_CHANNEL_5, itoa(temp, cstr, 10));*/
+  #endif
 
   // Mosquitto
   mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
@@ -695,32 +659,5 @@ void loop()
 #endif
   client.loop();
   mosquitto.loop();
-}
-
-void printDirectory(File dir, int numTabs) {
-  while (true) {
- 
-    File entry =  dir.openNextFile();
-    if (! entry) {
-      // no more files
-      break;
-    }
-    for (uint8_t i = 0; i < numTabs; i++) {
-      Serial.print('\t');
-    }
-    Serial.print(entry.name());
-    if (entry.isDirectory()) {
-      Serial.println("/");
-      printDirectory(entry, numTabs + 1);
-    } else {
-      // files have sizes, directories do not
-      Serial.print("\t\t");
-      Serial.print(entry.size(), DEC);
-      time_t lw = entry.getLastWrite();
-      struct tm * tmstruct = localtime(&lw);
-      Serial.printf("\tLAST WRITE: %d-%02d-%02d %02d:%02d:%02d\n", (tmstruct->tm_year) + 1900, (tmstruct->tm_mon) + 1, tmstruct->tm_mday, tmstruct->tm_hour, tmstruct->tm_min, tmstruct->tm_sec);
-    }
-    entry.close();
-  }
 }
 
