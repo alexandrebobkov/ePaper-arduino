@@ -35,8 +35,8 @@
 //#include <ErriezDS3231.h>
 //#include "GxIO.h"
 #include "mqtt.h"
-#include "automation.h"
-//#include "automation-0.h"
+//#include "automation.h"
+#include "automation-0.h"
 //#include "dashboard-0.h"
 //#include "dashboard.h"
 //#include "recorder.h"
@@ -115,7 +115,7 @@ WiFiClient espClient;
 PubSubClient mosquitto(espClient);
 
 // Section of code that processes JSON command(s) received from AWS IoT
-void messageHandler(char* topic, byte* payload, unsigned int length)
+/*void messageHandler(char* topic, byte* payload, unsigned int length)
 {
   Serial.print("Listening: ");
   Serial.println(topic);
@@ -203,7 +203,7 @@ void messageHandler(char* topic, byte* payload, unsigned int length)
     else if(ch5==0)
       Serial.print("Channel 5: 0");     
   }
-}
+}*/
 
 // Dummy task. Runs to blink built-in LED. Indicates that board has started
 void Task2code (void * parameters) {  
@@ -321,7 +321,7 @@ void LampTaskCode (void * parameters)
   }
 }
 
-void showUpdate(char ip[], const char text[], const GFXfont* f) {
+/*void showUpdate(char ip[], const char text[], const GFXfont* f) {
   //const char header[25] = "Networks IV\n";
   const char header[25] = "Workdesk Automation\n"; 
   //const char ip[25] = "IP: 10.100.50.20";
@@ -406,7 +406,7 @@ void Task3code (void * parameters) {
     showUpdate(info_ip_addr, aws_msg, &FreeMonoBold12pt7b);
     vTaskSuspend(NULL);
   } 
-}
+}*/
 
 // Task for handling wireless connection
 void TaskConnection (void * parameters) {
