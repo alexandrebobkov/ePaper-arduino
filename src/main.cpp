@@ -34,7 +34,7 @@
 //#include <Timelib.h>
 //#include <ErriezDS3231.h>
 //#include "GxIO.h"
-//#include "mqtt.h"
+#include "mqtt.h"
 //#include "automation.h"
 //#include "automation-0.h"
 //#include "dashboard-0.h"
@@ -48,6 +48,7 @@ struct Data {
   int * humidity;
 };
 
+// Define modules
 #define RTC
 #define MICRO_SD
 #define BMP280
@@ -650,13 +651,6 @@ void loop()
   Serial.println("test_topic: 3");
   Serial.println(mosquitto.state());
   delay(500);
-
-  //Serial.println("Appending sensors values ...\n");
-  //rec.appendValues(date, bme_temperature, bme_humidity, bme_pressure);
-  
-#if !defined(__AVR)
-#else
-#endif
   client.loop();
   mosquitto.loop();
 }
