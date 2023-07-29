@@ -4,3 +4,6 @@
 .vscode/launch.json
 .vscode/ipch
 src/secrets.h
+esp_node.crt
+esp_node.key
+esp32_ca.crt
