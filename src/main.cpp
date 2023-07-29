@@ -25,8 +25,6 @@
 #ifdef RTC
 #include <RTClib.h>
 #endif
-
-//#include <Adafruit_Sensor.h>
 #ifdef BME280
 #include <Adafruit_BME280.h>
 #endif
@@ -44,13 +42,12 @@ struct {
 RTC_DS3231 rtc;
 #endif
 
-
+// BME280
 #ifdef BME280
 // WaveShare BME280
 Adafruit_BME280 bme;
 #define SEALEVELPRESSURE_HPA (1013.25)
 #endif
-
 // BMP280
 #ifdef BMP280
 #define BMP_SCK   (18)
@@ -60,16 +57,16 @@ Adafruit_BME280 bme;
 Adafruit_BMP280 bmp(BMP_CS);
 #endif
 
-
-
 // Mosquitto
 #ifdef MQTT
 WiFiClient espClient;
 PubSubClient mosquitto(espClient);
+Mosquitto mosquitto = Mosquitto();
 #endif
 #ifdef MQTT_SSL
 WiFiClientSecure espClientSSL = WiFiClientSecure();
 PubSubClient mosquitto_ssl(espClientSSL);
+Mosquitto mosquitto = Mosquitto();
 #endif
 
 //AWSIoT
@@ -82,32 +79,7 @@ char cstr[16];
 
 void mosquito_callback (char* topic, byte* message, unsigned int length)
 {
-  Serial.print("\nMessage arrived on topic: ");
-  Serial.print(topic);
-  Serial.print(". Message: ");
-  String messageTemp;
-
-  for (int i=0; i < length; i++)
-  {
-    Serial.print((char)message[i]);
-    messageTemp += (char)message[i];
-  }
-  Serial.println();
-
-  if (String(topic) == "esp32/output")
-  {
-    Serial.print("Main. Changing output to: ");
-    if (messageTemp == "on")
-    {
-      Serial.println("Turn switch ON!\n");
-      //digitalWrite(SWITCH_1, LOW);    // Active level LOW
-    }
-    else if (messageTemp == "off")
-    {
-      Serial.println("Turn switch OFF!\n");
-      //digitalWrite(SWITCH_1, HIGH);
-    }
-  }
+  mosquitto.mosquito_callback(topic, message, length);
 }
 
 // set the callback function
@@ -121,18 +93,6 @@ void mosquito_callback (char* topic, byte* message, unsigned int length)
     mosquitto_ssl.setCallback(mosquito_callback);
   #endif
 }*/
-
-void mqtt_connect(PubSubClient mqtt)
-{
-  while (!mqtt.connected())
-  {
-    if (mqtt.connect("ESP32Client"))
-    {
-      Serial.println("connected");
-      mqtt.subscribe("esp32/output");
-    }
-  }
-}
 /*void reconnect()
 {
   #ifdef MQTT
@@ -156,6 +116,18 @@ void mqtt_connect(PubSubClient mqtt)
   }
   #endif
 }*/
+
+void mqtt_connect(PubSubClient mqtt)
+{
+  while (!mqtt.connected())
+  {
+    if (mqtt.connect("ESP32Client"))
+    {
+      Serial.println("connected");
+      mqtt.subscribe("esp32/output");
+    }
+  }
+}
 
 void setup()
 {
@@ -368,6 +340,4 @@ void loop()
     //
     mosquitto_ssl.loop();
     #endif
-
-  //client.loop();
 }
