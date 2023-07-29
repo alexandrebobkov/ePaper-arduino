@@ -19,7 +19,7 @@
 #define MQTT_IOT_CHANNEL_1 "esp32/sensors/temp"
 #define MQQT_IOT_CHANNEL_9 "esp32/output"
 
-class mqtt
+class Mqtt
 {
     public:
         void mosquito_callback (char* topic, byte* message, unsigned int length);

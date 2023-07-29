@@ -13,28 +13,13 @@
 //#define BME280    // Generic BME280; temp, pressure & humidity
 #define MQTT_SSL
 //#define MQTT
+//#define AWSIoT
 
 #include "secrets.h"
 #include <WiFi.h>
 #include <WiFiClientSecure.h>             // ESP32 library
 #include <PubSubClient.h>
-#include <ArduinoJson.h>
-//#include "WiFi.h"
-//#include <WiFi.h>
-//#include <Wire.h> 
-//#include <GxEPD.h>
-//#include <GxGDEW042Z15/GxGDEW042Z15.h>    // 4.2" b/w/r
-//#include GxEPD_BitmapExamples
-// FreeFonts from Adafruit_GFX
-//#include <Fonts/FreeMonoBold9pt7b.h>
-//#include <Fonts/FreeMonoBold12pt7b.h>
-//#include <Fonts/FreeMonoBold18pt7b.h>
-//#include <Fonts/FreeMonoBold24pt7b.h>
-//#include <GxIO/GxIO_SPI/GxIO_SPI.h>
-//#include <GxIO/GxIO.h>
-
-#include <SPI.h>
-//#include <Adafruit_GFX.h>
+#include "mqtt.h"
 
 // Include libraries based on modules selected
 #ifdef RTC
@@ -48,16 +33,6 @@
 #ifdef BMP280
 #include <Adafruit_BMP280.h>
 #endif
-//#include <Timelib.h>
-//#include <ErriezDS3231.h>
-//#include "GxIO.h"
-#include "mqtt.h"
-//#include "automation.h"
-#include "automation-0.h"
-//#include "dashboard-0.h"
-//#include "dashboard.h"
-//#include "recorder.h"
-
 
 struct {
   float humidity = 0.0;
@@ -98,110 +73,12 @@ PubSubClient mosquitto_ssl(espClientSSL);
 #endif
 
 //AWSIoT
+#ifdef AWSIoT
 WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
+#endif
 
-char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-
-/*// Define output pins
-const int output_2 = 2;//4;   // built-in LED pin #
-// output pins that will be used to control relay; for now they control LEDs
-const int output_1 = 22;//19;    // Pin 19 conflicts with ssd card module
-const int output_22 = 22;   // Pin 22
-const int output_23 = 21;*/
-int sensor_values[68];
-int sensor_val = 0;
-
-char aws_msg[25] = "";
-char info_ip_addr[16] = "000.000.000.000";
-char display_msg[4][50] = {"", "", "", ""};
-float temp = 0.0;
-float humidity = 0.0;
-float pressure = 0.0;
-float temperature = 0.0;
-
-// Publishes value to MQTT  
-int mqtt_temp;
-/*
-int bme_humidity;
-int bme_temperature;
-int bme_pressure;
-*/
-/*int humidity;
-int temperature;
-int pressure;*/
-
-//int min;
-int r;
 char cstr[16];
-
-String full_date;
-
-// Dummy task. Runs to blink built-in LED. Indicates that board has started
-void Task2code (void * parameters) {  
-  Serial.print("Task 2 running on core # ");
-    Serial.println(xPortGetCoreID());
-    int i = 0;
-    int c = 0, v = 10;
-
-    for (;;)
-    {
-      if ((i>=0) && (i<68))
-        {
-          sensor_values[i] = analogRead(LIGHT_SENSOR_PIN);
-          //analogWrite(RGB_BLUE_PIN, (sensor_values[i]/4095)*200);
-          i++;
-        }
-        else
-        {
-          i = 0;
-          vTaskResume(Task3);
-          //vTaskResume(TaskSd);
-        }
-      // Blinkpattern: 3 quick flashes, pause
-      // Task runs forever unless paused/terminated from outside
-      // vTaskDelay() to be used as opposed to Delay()
-      digitalWrite(output_2, HIGH);
-      vTaskDelay(125);
-      digitalWrite(output_2, LOW);
-      vTaskDelay(125);
-      digitalWrite(output_2, HIGH);
-      vTaskDelay(125);
-      digitalWrite(output_2, LOW);
-      vTaskDelay(125);
-      digitalWrite(output_2, HIGH);
-      vTaskDelay(125);
-      digitalWrite(output_2, LOW);
-      vTaskDelay(1500);
-    }
-}
-
-// Task for handling wireless connection
-void TaskConnection (void * parameters) {
-  for (;;) {
-    WiFi.mode(WIFI_STA);
-    String hostname = "ESP32LF";
-    WiFi.setHostname(hostname.c_str());
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  
-    Serial.println("Connecting to Wi-Fi ...");
-  
-    while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
-    }
-    Serial.print("\nCONNECTED\nIP: ");
-    Serial.println(WiFi.localIP());
-    // Update IP address for displaying.
-    String lan_addr = WiFi.localIP().toString();
-    lan_addr.toCharArray(info_ip_addr, lan_addr.length()+1);
-    vTaskSuspend(NULL);
-  }
-}
-
-void TaskSdCode (void* parameters) {
-    vTaskSuspend(NULL);
-}
 
 void mosquito_callback (char* topic, byte* message, unsigned int length)
 {
@@ -223,18 +100,18 @@ void mosquito_callback (char* topic, byte* message, unsigned int length)
     if (messageTemp == "on")
     {
       Serial.println("Turn switch ON!\n");
-      digitalWrite(SWITCH_1, LOW);    // Active level LOW
+      //digitalWrite(SWITCH_1, LOW);    // Active level LOW
     }
     else if (messageTemp == "off")
     {
       Serial.println("Turn switch OFF!\n");
-      digitalWrite(SWITCH_1, HIGH);
+      //digitalWrite(SWITCH_1, HIGH);
     }
   }
 }
 
 // set the callback function
-void setupMQTT() {
+/*void setupMQTT() {
   #ifdef MQTT
     mosquitto.setServer(mqtt_server, 1883);
     mosquitto.setCallback(mosquito_callback);
@@ -243,7 +120,7 @@ void setupMQTT() {
     mosquitto_ssl.setServer(mqtt_server, 8883);
     mosquitto_ssl.setCallback(mosquito_callback);
   #endif
-}
+}*/
 
 void mqtt_connect(PubSubClient mqtt)
 {
@@ -390,8 +267,6 @@ void setup()
   
 }
 
-
-
 void loop()
 {
   #ifdef RTC
@@ -494,5 +369,5 @@ void loop()
     mosquitto_ssl.loop();
     #endif
 
-  client.loop();
+  //client.loop();
 }
