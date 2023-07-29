@@ -65,9 +65,6 @@ struct {
   float temperature = 0.0;
 } sensors_values;
 
-
-
-
 #ifdef RTC
 RTC_DS3231 rtc;
 #endif
@@ -87,6 +84,22 @@ Adafruit_BME280 bme;
 #define BMP_CS    (5)
 Adafruit_BMP280 bmp(BMP_CS);
 #endif
+
+
+
+// Mosquitto
+#ifdef MQTT
+WiFiClient espClient;
+PubSubClient mosquitto(espClient);
+#endif
+#ifdef MQTT_SSL
+WiFiClientSecure espClientSSL = WiFiClientSecure();
+PubSubClient mosquitto_ssl(espClientSSL);
+#endif
+
+//AWSIoT
+WiFiClientSecure net = WiFiClientSecure();
+PubSubClient client(net);
 
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
@@ -123,113 +136,6 @@ int r;
 char cstr[16];
 
 String full_date;
-
-//void drawLogo(File f);
-
-//AWSIoT
-WiFiClientSecure net = WiFiClientSecure();
-PubSubClient client(net);
-
-// Mosquitto
-#ifdef MQTT
-WiFiClient espClient;
-PubSubClient mosquitto(espClient);
-#endif
-#ifdef MQTT_SSL
-WiFiClientSecure espClientSSL = WiFiClientSecure();
-PubSubClient mosquitto_ssl(espClientSSL);
-#endif
-
-// Section of code that processes JSON command(s) received from AWS IoT
-/*void messageHandler(char* topic, byte* payload, unsigned int length)
-{
-  Serial.print("Listening: ");
-  Serial.println(topic);
- 
- // Controlls dummy task to blink built-in LED
-  if (strstr(topic, "iot/ch1")) {
-    StaticJsonDocument<200> doc;
-    deserializeJson(doc, payload);
-    String Channel_1 = doc["status"];
-    int ch1 = Channel_1.toInt();
-    if(ch1==1) {
-      Serial.println("Channel 1: Message received.");
-      Serial.println("Channel 1: Status = 1; LED task resume.");  
-      vTaskResume(Task2);
-    }   
-    else if(ch1==0) {
-      Serial.println("Channel 1: Message received.");
-      Serial.println("Channel 1: Status = 0; LED task suspend.");   
-      vTaskSuspend(Task2);  
-    }     
-  }
-  // LED Table Lamp; active LOW
-  if (strstr(topic, "iot/ch2")) {
-    StaticJsonDocument<200> doc;
-    deserializeJson(doc, payload);
-    String Channel_2 = doc["status"];
-    int ch2 = Channel_2.toInt();
-    if(ch2==1) {
-      Serial.print("Channel 2: 1");
-      if (digitalRead(LED_PIN))         // Turn table lights on only if anbient light is low
-        digitalWrite(output_22, LOW);
-    }
-    else if(ch2==0) {
-      Serial.print("Channel 2: 0");   
-      digitalWrite(output_22, HIGH);  
-    }
-  }
-  // on-off cycle
-  if (strstr(topic, "iot/ch3")) {
-    StaticJsonDocument<200> doc;
-    deserializeJson(doc, payload);
-    String Channel_3 = doc["status"];
-    int ch3 = Channel_3.toInt();
-    if(ch3==1) {
-      Serial.print("Channel 3: 1");  
-      vTaskResume(Task1);  
-    } 
-    else if(ch3==0) {
-      Serial.print("Channel 3: 0");  
-      vTaskSuspend(Task1);  
-    } 
-  }
-  if (strstr(topic, "iot/ch4")) {
-    StaticJsonDocument<200> doc;
-    deserializeJson(doc, payload);
-    String Channel_4 = doc["status"];
-    String Channel_4_msg = doc["message"];
-    String Channel_4_ip_addr = doc["ip_addr"];
-    int ch4 = Channel_4.toInt();
-    if(ch4==1) {
-      Serial.println("R4 is ON");
-      vTaskResume(Task3);
-      Serial.print("Resumed task");
-      Serial.println(Channel_4_msg);
-      Serial.println(Channel_4_msg);
-      Serial.println(Channel_4_ip_addr);
-    } 
-    else if(ch4==0) {
-      Serial.println("R4 is OFF");
-      Serial.print("Paused task");
-      Serial.println(Channel_4_msg);
-    }     
-  }
-  if (strstr(topic, "iot/ch5")) {
-    StaticJsonDocument<200> doc;
-    deserializeJson(doc, payload);
-    String Channel_5_status = doc["status"];
-    int ch5 = Channel_5_status.toInt();
-    if(ch5==1) {
-      Serial.println("R5 is ON");
-      vTaskResume(Task4);
-      Serial.print("Resumed task");
-      Serial.println(Channel_5_status);
-    }     
-    else if(ch5==0)
-      Serial.print("Channel 5: 0");     
-  }
-}*/
 
 // Dummy task. Runs to blink built-in LED. Indicates that board has started
 void Task2code (void * parameters) {  
@@ -269,170 +175,6 @@ void Task2code (void * parameters) {
       vTaskDelay(1500);
     }
 }
-
-void LampTaskCode (void * parameters)
-{
-  //int i = 0;
-  
-  for (;;)
-  {
-    int analogValue = analogRead(LIGHT_SENSOR_PIN);
-    if (analogValue < ANALOG_THRESHOLD)
-    {
-      digitalWrite(LED_PIN, LOW);
-    }
-    else
-    {
-      digitalWrite(LED_PIN, HIGH);
-      vTaskDelay(10000);
-    }
-
-    /*DateTime now = rtc.now();
-    full_date = now.timestamp();
-    String date = now.timestamp();
-    Serial.println(date);
-    Serial.print(now.year(), DEC);
-    Serial.print('/');
-    Serial.print(now.month(), DEC);
-    Serial.print('/');
-    Serial.print(now.day(), DEC);
-    Serial.print(" (");
-    Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
-    Serial.print(") ");
-    Serial.print(now.hour(), DEC);
-    Serial.print(':');
-    Serial.print(now.minute(), DEC);
-    Serial.print(':');
-    Serial.print(now.second(), DEC);
-  /*Serial.println();
-  Serial.print("Temperature: ");
-  rtc_temp = rtc.getTemperature();
-  //Serial.println(rtc.getTemperature(), DEC);
-  Serial.println(rtc_temp, DEC);*/
-
-  // WaveShare BME280
-  /*Serial.println("\n==== BME-280 =============");
-  Serial.print("Temperature = ");
-  Serial.println(bme.readTemperature());
-  humidity = (float)bme.readHumidity();
-  Serial.print("Humidity = ");
-  //Serial.println(bme.readHumidity());
-  Serial.print(humidity);
-  Serial.println("%");
-  pressure = (float)bme.readPressure() / 100.0F;
-  Serial.print("Pressure = ");
-  Serial.print(pressure);
-  Serial.println(" kPa");
-
-  // WaveShare BME280
-  Serial.println("\n==== BMP-280 =============");
-  Serial.print("Temperature = ");
-  Serial.println(bmp.readTemperature());
-  Serial.print("Pressure = ");
-  Serial.print(bmp.readPressure() / 100.0F);
-  Serial.println(" hPa");
-
-  // Publishes value to MQTT  
-  temp = (float)rtc.getTemperature();
-  bme_humidity = (float)bme.readHumidity();
-  bme_temperature = (float)bme.readTemperature();
-  bme_pressure = (float)bme.readPressure() / 100.0F;
-  //min = now.minute();
-  r = random();
-  //int analogValue = analogRead(LIGHT_SENSOR_PIN);*/
-  
-
-
-    vTaskDelay(1000);
-  }
-}
-
-/*void showUpdate(char ip[], const char text[], const GFXfont* f) {
-  //const char header[25] = "Networks IV\n";
-  const char header[25] = "Workdesk Automation\n"; 
-  //const char ip[25] = "IP: 10.100.50.20";
-  const char ip_addr[] = "121.21.10.20";
-  //const char footer[] = "\nWireless\nAutomation Board\n\nControlled via Cloud";
-  const char footer[] = "\nSensors and Variables";
-  const char message[] = "MQTT CH-1: Relay 1 ON";
-  
-  //display.updateWindow(70,20,300,400,false);
-  display.fillScreen(GxEPD_WHITE);
-  display.setTextColor(GxEPD_BLACK);
-  display.setTextColor(GxEPD_DARKGREY); //
-  display.setFont(f);
-  display.setCursor(10, 20);
-  display.println(header);
-  display.setFont(&FreeMonoBold9pt7b);
-  //display.print("Updated: ");
-  display.println(full_date);
-  //display.setTextColor(GxEPD_LIGHTGREY);
-  int x, y;
-  int n = 0;
-  for (x = 10; x < 280; x+=4) {
-    for (y = 240; y < 380; y +=4)
-      display.drawPixel(x, y, GxEPD_BLACK);      
-    n++;
-  }
-
-  for (int i = 0; i < 68; i++)
-    display.fillCircle(10+i*4, 380-(sensor_values[i]/30), 2, GxEPD_RED);
-
-  display.drawRect(2, 232, 12+x-10, 12+y-240, GxEPD_RED);
-  Serial.print("\nArray: ");
-  Serial.println(n);
-
-  //display.drawRect(2,250,298,148, GxEPD_RED);
-  //display.setFont(&FreeMonoBold9pt7b);
-  display.print("IP: ");
-  display.println(ip);
-  //display.println(text);  
-  display.println(message);
-  display.setTextColor(GxEPD_RED);
-  display.setFont(&FreeMonoBold9pt7b);
-  // Display sensors and variables
-  display.println(footer);
-  display.setTextColor(GxEPD_BLACK);
-  // Display light sensor reading
-  int v = analogRead(LIGHT_SENSOR_PIN);
-  char cstr[8];//16];
-  display.println(itoa(v, cstr, 10));
-  // Display temperature sensor reading
-  display.print("Temperature: ");  
-  char temp_cstr[8];//16];
-  display.print(itoa(temp, temp_cstr, 10));
-  //display.print(itoa(humidity, temp_cstr, 10));
-  display.println("C");
-
-  // Display humidity sensor reading
-  display.print("Humidity: ");
-  char h_cstr[8];
-  display.print(itoa(humidity, h_cstr, 10));
-  display.println("%");
-
-  // Display pressure sensor reading
-  display.print("Pressure: ");
-  char p_cstr[8];
-  display.print(itoa(pressure, p_cstr, 10));
-  display.print(" kPa");
-  
-  display.update(); 
-}
-
-// Display information on ePaper display.
-void Task3code (void * parameters) {  
-  Serial.print("Task 3 running on core # ");
-  Serial.println(xPortGetCoreID());
-
-  for (;;) {
-    Serial.print("Updating screen ...");
-    display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false);
-    display.setRotation(3);
-    display.fillScreen(GxEPD_WHITE);
-    showUpdate(info_ip_addr, aws_msg, &FreeMonoBold12pt7b);
-    vTaskSuspend(NULL);
-  } 
-}*/
 
 // Task for handling wireless connection
 void TaskConnection (void * parameters) {
@@ -503,7 +245,18 @@ void setupMQTT() {
   #endif
 }
 
-void reconnect()
+void mqtt_connect(PubSubClient mqtt)
+{
+  while (!mqtt.connected())
+  {
+    if (mqtt.connect("ESP32Client"))
+    {
+      Serial.println("connected");
+      mqtt.subscribe("esp32/output");
+    }
+  }
+}
+/*void reconnect()
 {
   #ifdef MQTT
   while (!mosquitto.connected())
@@ -525,7 +278,7 @@ void reconnect()
     }
   }
   #endif
-}
+}*/
 
 void setup()
 {
@@ -719,27 +472,28 @@ void loop()
   Serial.println("test_topic: 3");
   Serial.println(mosquitto.state());
   delay(500);
-  client.loop();
+  //client.loop();
   mosquitto.loop();
   #endif
+
   #ifdef MQTT_SSL
-  Serial.println("\n==== MQTT SSL =============");
-  //mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
-  mosquitto_ssl.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(sensors_values.temperature, cstr, 10));
-  mosquitto_ssl.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(sensors_values.pressure / 100.0F, cstr, 10));
-  mosquitto_ssl.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(sensors_values.humidity, cstr, 10));
-  mosquitto_ssl.publish(MQTT_IOT_CHANNEL_0, "10");
-  Serial.println("test_topic: 10");
-  delay(500);
-  mosquitto_ssl.publish(MQTT_IOT_CHANNEL_0, "3");
-  Serial.println("test_topic: 3");
+    Serial.println("\n==== MQTT SSL =============");
+    //mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
+    mosquitto_ssl.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(sensors_values.temperature, cstr, 10));
+    mosquitto_ssl.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(sensors_values.pressure / 100.0F, cstr, 10));
+    mosquitto_ssl.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(sensors_values.humidity, cstr, 10));
+    mosquitto_ssl.publish(MQTT_IOT_CHANNEL_0, "10");
+    Serial.println("test_topic: 10");
+    delay(500);
+    mosquitto_ssl.publish(MQTT_IOT_CHANNEL_0, "3");
+    Serial.println("test_topic: 3");
 
-  Serial.println(mosquitto_ssl.state());
-  delay(500);
+    Serial.println(mosquitto_ssl.state());
+    delay(500);
+    //
+    mosquitto_ssl.loop();
+    #endif
+
   client.loop();
-  mosquitto_ssl.loop();
-  #endif
-
-  
 }
 
