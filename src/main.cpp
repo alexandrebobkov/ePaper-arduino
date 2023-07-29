@@ -6,6 +6,12 @@
   July 28, 2023
 */
 
+// Define modules
+#define RTC
+#define MICRO_SD
+#define BMP280
+#define BME280
+
 #include "secrets.h"
 #include <WiFi.h>
 #include <WiFiClientSecure.h>             // ESP32 library
@@ -27,10 +33,18 @@
 
 #include <SPI.h>
 //#include <Adafruit_GFX.h>
+
+#ifdef RTC
 #include <RTClib.h>
-#include <Adafruit_Sensor.h>
+#endif
+
+//#include <Adafruit_Sensor.h>
+#ifdef BME280
 #include <Adafruit_BME280.h>
+#endif
+#ifdef BMP280
 #include <Adafruit_BMP280.h>
+#endif
 //#include <Timelib.h>
 //#include <ErriezDS3231.h>
 //#include "GxIO.h"
@@ -48,11 +62,7 @@ struct Data {
   int * humidity;
 };
 
-// Define modules
-#define RTC
-#define MICRO_SD
-#define BMP280
-#define BME280
+
 
 
 #ifdef RTC
@@ -95,9 +105,15 @@ float pressure = 0.0;
 
 // Publishes value to MQTT  
 int mqtt_temp;
+/*
 int bme_humidity;
 int bme_temperature;
 int bme_pressure;
+*/
+int humidity;
+int temperature;
+int pressure;
+
 //int min;
 int r;
 char cstr[16];
@@ -627,23 +643,27 @@ void loop()
 
   Serial.println("\n==== MQTT =============");
   // Publishes value to MQTT  
+  /*
   int temp = (float)rtc.getTemperature();
   int bme_humidity = (float)bme.readHumidity();
   int bme_temperature = (float)bme.readTemperature();
   int bme_pressure = (float)bme.readPressure() / 100.0F;
-  int min = now.minute();
-  int r = random();
+  */
+  int temp = (float)rtc.getTemperature();
+  humidity = (float)bme.readHumidity();
+  temperature = (float)bme.readTemperature();
+  pressure = (float)bme.readPressure() / 100.0F;
+  //int min = now.minute();
+  //int r = random();
   int analogValue = analogRead(LIGHT_SENSOR_PIN);
   char cstr[16];
-  /*client.publish(AWS_IOT_CHANNEL_5, itoa(min, cstr, 10));
-  client.publish(AWS_IOT_CHANNEL_5, itoa(temp, cstr, 10));*/
   #endif
 
   // Mosquitto
   mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
-  mosquitto.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(bme_temperature, cstr, 10));
-  mosquitto.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(bme_pressure, cstr, 10));
-  mosquitto.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(bme_humidity, cstr, 10));
+  mosquitto.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(temperature, cstr, 10));
+  mosquitto.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(pressure, cstr, 10));
+  mosquitto.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(humidity, cstr, 10));
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "10");
   Serial.println("test_topic: 10");
   delay(500);
