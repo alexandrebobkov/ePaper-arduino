@@ -59,6 +59,11 @@ Adafruit_BME280 bme;
 #define SEALEVELPRESSURE_HPA (1013.25)
 //ErriezDS3231 rtc;
 
+#define MICRO_SD
+#define BMP280
+#define BME280
+#define RTC
+
 Recorder rec;
 Automation automation;
 File f_rec;
@@ -527,12 +532,15 @@ void setup()
     while (1);
   }*/
 
+// Initialize RTC module, if defined
+#ifdef RTC
   rtc.begin();  
   if (! rtc.begin())
   {
     Serial.println("Couldn't find RTC");
     while (1);
   }
+#endif
   
   
   // Uncomment when compiling for the first time
@@ -552,7 +560,12 @@ void setup()
   //delay(500);
 
   Serial.println("1");
+
+  // Initialize micro SD module, if defined
+  #ifdef MICRO_SD
   rec.initSdCard();
+  #endif
+
   Serial.println("2");
   display.fillScreen(GxEPD_WHITE);
   Serial.println("3");
@@ -701,6 +714,7 @@ void setup()
     mosquitto.setCallback(mosquito_callback);
   }
   else
+    Serial.print("Mosquitto state: ");
     Serial.println(mosquitto.state());
 }
 
@@ -753,6 +767,7 @@ void loop()
   Serial.print(bmp.readPressure() / 100.0F);
   Serial.println(" hPa");
 
+  Serial.println("\n==== MQTT =============");
   // Publishes value to MQTT  
   int temp = (float)rtc.getTemperature();
   int bme_humidity = (float)bme.readHumidity();
@@ -772,10 +787,11 @@ void loop()
   mosquitto.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(bme_humidity, cstr, 10));
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "10");
   Serial.println("test_topic: 10");
-  delay(250);
+  delay(500);
   mosquitto.publish(MQTT_IOT_CHANNEL_0, "3");
   Serial.println("test_topic: 3");
-  delay(250);
+  Serial.println(mosquitto.state());
+  delay(500);
 
   //Serial.println("Appending sensors values ...\n");
   //rec.appendValues(date, bme_temperature, bme_humidity, bme_pressure);
