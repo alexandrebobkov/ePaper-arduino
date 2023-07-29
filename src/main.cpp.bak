@@ -3,14 +3,14 @@
     
   ePaper embeded system program written in style adopted for learning.
   Adopted & written by: Alexander Bobkov
-  July 28, 2023
+  Mar 11, 2023
 */
 
 #include "secrets.h"
 #include <WiFi.h>
 #include <WiFiClientSecure.h>             // ESP32 library
 #include <PubSubClient.h>
-//#include <ArduinoJson.h>
+#include <ArduinoJson.h>
 //#include "WiFi.h"
 //#include <WiFi.h>
 //#include <Wire.h> 
@@ -34,12 +34,12 @@
 //#include <Timelib.h>
 //#include <ErriezDS3231.h>
 //#include "GxIO.h"
-//#include "mqtt.h"
-//#include "automation.h"
-//#include "automation-0.h"
-//#include "dashboard-0.h"
-//#include "dashboard.h"
-//#include "recorder.h"
+#include "mqtt.h"
+#include "automation.h"
+#include "automation-0.h"
+#include "dashboard-0.h"
+#include "dashboard.h"
+#include "recorder.h"
 
 
 struct Data {
@@ -48,7 +48,10 @@ struct Data {
   int * humidity;
 };
 
-#define RTC
+// Define tasks.
+//TaskHandle_t Task1, Task2, Task3, Task4, Task5;   // For prototyping purposes these tasks control LEDs based on received command
+//TaskHandle_t LampTask, StorageCard;
+
 RTC_DS3231 rtc;
 // WaveShare BME280
 Adafruit_BME280 bme;
@@ -59,11 +62,11 @@ Adafruit_BME280 bme;
 #define MICRO_SD
 #define BMP280
 #define BME280
+#define RTC
 
-
-//Recorder rec;
-//Automation automation;
-//File f_rec;
+Recorder rec;
+Automation automation;
+File f_rec;
 
 // BMP280
 #define BMP_SCK   (18)
