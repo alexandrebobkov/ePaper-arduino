@@ -487,23 +487,10 @@ void setup()
   Serial.begin(115200);
   Serial.println();
   Serial.println("setup");  
-  display.init(115200); // enable diagnostic output on Serial
-  /*Serial.println("GxEPD_WHITE");
-  display.fillScreen(GxEPD_WHITE);
-  display.update();
-  //display.eraseDisplay();*/
   Serial.println("setup done");
 
-  //xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
-  
-
-  //xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
-  /*pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
-  pinMode(LED_PIN_OVERRIDE, OUTPUT);
-  attachInterrupt(PUSH_BUTTON_PIN, button_isr_handler, FALLING);
-  digitalWrite(LED_PIN_OVERRIDE, led_status);*/
-
   // WaveShare BME280
+  #ifdef BME280
   unsigned status = bme.begin(); 
   if (!status) {
     Serial.println("Could not find a valid BME/BMP280 sensor, check wiring!");
@@ -518,7 +505,9 @@ void setup()
     humidity = bme.readHumidity();
     pressure = bme.readPressure()  / 100.0F;
   }
+  #endif
 
+  #ifdef BMP280
   // BMP280
   /*unsigned status_bmp280;
   status_bmp280 = bmp.begin();
@@ -527,18 +516,19 @@ void setup()
     Serial.println(bme.sensorID(),16);
     while (1);
   }*/
+  #endif
 
-// Initialize RTC module, if defined
-#ifdef RTC
+  // Initialize RTC module, if defined
+  #ifdef RTC
   rtc.begin();  
   if (! rtc.begin())
   {
     Serial.println("Couldn't find RTC");
     while (1);
   }
-#endif
-  
-  
+  temp = rtc.getTemperature();
+
+  #endif  
   // Uncomment when compiling for the first time
   //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   /*if (rtc.lostPower()) {
@@ -549,99 +539,7 @@ void setup()
     // January 21, 2014 at 3am you would call:
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
   }*/
-  
-  temp = rtc.getTemperature();
-  //Serial.println("GxEPD_WHITE");
-  //display.fillScreen(GxEPD_WHITE);
-  //delay(500);
-
-  Serial.println("1");
-
-  // Initialize micro SD module, if defined
-  #ifdef MICRO_SD
-  rec.initSdCard();
-  #endif
-
-  Serial.println("2");
-  display.fillScreen(GxEPD_WHITE);
-  Serial.println("3");
-  rec.displayImage("/ui-002.bmp");
-  Serial.println("4");
-  display.update();
-  Serial.println("5");
-  delay(5000);
-  Serial.println("6");
-  display.fillScreen(GxEPD_WHITE);
-  Serial.println("7");
-  rec.displayImage("/picture-001.bmp");
-  Serial.println("8");
-  display.update();
-  Serial.println("9");
-  delay(5000);
-
-
-  // Define switches pins
-  pinMode(SWITCH_1,   OUTPUT);
-  pinMode(SWITCH_2,   OUTPUT); 
-  pinMode(LED_PIN,    OUTPUT);
-  pinMode(output_1,   OUTPUT);
-  pinMode(output_2,   OUTPUT);
-  pinMode(output_22,  OUTPUT);
-
-  digitalWrite(SWITCH_1,  HIGH);
-  digitalWrite(SWITCH_2,  HIGH); 
-  //digitalWrite(LED_PIN, HIGH);  
-  digitalWrite(output_1,  HIGH);  
-  digitalWrite(output_2,  HIGH);  
-  digitalWrite(output_22, HIGH);
-
-  // RGB
-  //pinMode(RGB_RED_PIN, OUTPUT);
-  //digitalWrite(RGB_RED_PIN, HIGH);
-
-  //pinMode(RGB_BLUE_PIN, OUTPUT);
-  ledcSetup(0, 5000, 8);
-  ledcAttachPin(RGB_B_PIN, 0);
-  //ledcAttachPin(RGB_RED_PIN, 0);
-  //digitalWrite(RGB_BLUE_PIN, HIGH);
-  //analogWrite(RGB_BLUE_PIN, 255);
-
-  /*pinMode(RGB_BLUE_PIN, OUTPUT);
-  digitalWrite(RGB_BLUE_PIN, HIGH);*/
- 
-  // print the type and size of the first FAT-type volume
-//  uint32_t volumesize;
-//  Serial.print("Volume type is:    FAT");
-//  Serial.println(SDFS.usefatType(), DEC);
- 
-  
-
-  // Create thread for task 1
-  //xTaskCreatePinnedToCore(Task1code, "Task1", 1000, NULL, 2, &Task1, 0);
-  
-  xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
-  
-  //xTaskCreatePinnedToCore(TaskLedCode, "Task LED", 1000, NULL, 3, &TaskLed, 0);
-  //xTaskCreatePinnedToCore(Task0code, "Task0", 1000, NULL, 2, &Task1, 0); 
-  
-  int sensor = 50;
-  xTaskCreatePinnedToCore(TaskLedCode, "Task LED", 1000, (void*)&sensor, 3, &TaskLed, 0);
-
-  // Create thread for task 2
-  xTaskCreatePinnedToCore(Task2code, "Task2", 1000, NULL, 1, &Task2, 1); 
-
-  // Create thread for task 3
-  //xTaskCreatePinnedToCore(TaskScreen, "Task3", 1000, NULL, 5, &Task3, 1);
-  // Display information on ePaper display.
-  //xTaskCreatePinnedToCore(Task3code, "Task3", 1000, NULL, 5, &Task3, 1);  
-  xTaskCreatePinnedToCore(LampTaskCode, "Lamp Task", 1000, NULL, 5, &LampTask, 0);
-  xTaskCreatePinnedToCore(TaskSdCode, "Sensors Task", 1000, NULL, 8, &TaskSd, 1);
-  //xTaskCreatePinnedToCore(StorageCardcode, "Storage Card", 1000, NULL, 7, &StorageCard, 1);
-
-  //xTaskCreatePinnedToCore(TaskConnection, "Connection", 1000, NULL, 3, &Connection, 1);
-  
-
-  
+    
   String hostname = "ESP32LF";
   WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
   WiFi.setHostname(hostname.c_str());
