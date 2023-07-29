@@ -49,28 +49,30 @@ struct Data {
 };
 
 #define RTC
-RTC_DS3231 rtc;
-// WaveShare BME280
-Adafruit_BME280 bme;
-//#define BME280_ADDRESS (0X76)
-#define SEALEVELPRESSURE_HPA (1013.25)
-//ErriezDS3231 rtc;
-
 #define MICRO_SD
 #define BMP280
 #define BME280
 
 
-//Recorder rec;
-//Automation automation;
-//File f_rec;
+#ifdef RTC
+RTC_DS3231 rtc;
+#endif
+
+
+#ifdef BME280
+// WaveShare BME280
+Adafruit_BME280 bme;
+#define SEALEVELPRESSURE_HPA (1013.25)
+#endif
 
 // BMP280
+#ifdef BMP280
 #define BMP_SCK   (18)
 #define BMP_MISO  (19)
 #define BMP_MOSI  (23)
 #define BMP_CS    (5)
 Adafruit_BMP280 bmp(BMP_CS);
+#endif
 
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
