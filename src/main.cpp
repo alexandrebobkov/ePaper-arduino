@@ -7,10 +7,10 @@
 */
 
 // Define modules
-#define RTC
+//#define RTC
 #define MICRO_SD
-//#define BMP280
-#define BME280
+#define BMP280
+//#define BME280
 
 #include "secrets.h"
 #include <WiFi.h>
@@ -531,7 +531,7 @@ void setup()
   status_bmp280 = bmp.begin();
   if (!status_bmp280) {
     Serial.println("Could not find BMP280");
-    Serial.println(bme.sensorID(),16);
+    Serial.println(bmp.sensorID(),16);
     while (1);
   }
   #endif
@@ -545,7 +545,6 @@ void setup()
     while (1);
   }
   temp = rtc.getTemperature();
-
   #endif  
   // Uncomment when compiling for the first time
   //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
@@ -643,7 +642,7 @@ void loop()
   char cstr[16];
   #endif
 
-  // WaveShare BME280
+  // WaveShare BMP280
   #ifdef BMP280
   Serial.println("\n==== BMP-280 =============");
   Serial.print("Temperature = ");
