@@ -35,7 +35,7 @@
 //#include <ErriezDS3231.h>
 //#include "GxIO.h"
 #include "mqtt.h"
-//#include "automation.h"
+#include "automation.h"
 //#include "automation-0.h"
 //#include "dashboard-0.h"
 //#include "dashboard.h"

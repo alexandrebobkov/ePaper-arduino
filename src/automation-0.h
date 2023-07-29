@@ -1,6 +1,7 @@
 #include <SPI.h>
 #include <GxIO.h>
 
+
 #define LIGHT_SENSOR_PIN 34   // analog in pin # for a light sensor
 #define LED_PIN 32            // pin # of LED controlled by light sensor
 #define ANALOG_THRESHOLD 1800 // threshhold for analog input when logical 0 should become logical 1
@@ -34,7 +35,7 @@ TaskHandle_t LampTask, StorageCard, Connection;
 // Interrupt for push button
 TaskHandle_t LED_OVERRIDE = NULL;
 
-WiFiClientSecure wifi_conn = WiFiClientSecure();
+//WiFiClientSecure wifi_conn = WiFiClientSecure();
 
 // Define output pins
 const int output_2  = 2;//4;    // built-in LED pin 
@@ -120,7 +121,7 @@ void TaskLedCode (void * parameters) {
     }
 }
 
-void TaskWiFiCode (void* parameters)
+/*void TaskWiFiCode (void* parameters)
 {
   for (;;) {
     WiFi.mode(WIFI_STA);
@@ -137,4 +138,4 @@ void TaskWiFiCode (void* parameters)
     Serial.println(WiFi.localIP());
     vTaskSuspend(NULL);
   }
-}
+}*/
