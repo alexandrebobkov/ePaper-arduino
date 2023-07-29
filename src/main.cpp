@@ -11,8 +11,8 @@
 #define MICRO_SD
 #define BMP280      // Adafruit BMP280; temp & pressure
 //#define BME280    // Generic BME280; temp, pressure & humidity
-#define MQTT_SSL
-//#define MQTT
+//#define MQTT_SSL
+#define MQTT
 
 #include "secrets.h"
 #include <WiFi.h>
