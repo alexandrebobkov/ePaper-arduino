@@ -60,12 +60,12 @@ Adafruit_BMP280 bmp(BMP_CS);
 // Mosquitto
 #ifdef MQTT
 WiFiClient espClient;
-PubSubClient mosquitto(espClient);
+PubSubClient connection(espClient);
 Mosquitto mosquitto = Mosquitto();
 #endif
 #ifdef MQTT_SSL
 WiFiClientSecure espClientSSL = WiFiClientSecure();
-PubSubClient mosquitto_ssl(espClientSSL);
+PubSubClient connection(espClientSSL); //mosquitto_ssl
 Mosquitto mosquitto = Mosquitto();
 #endif
 
@@ -210,31 +210,31 @@ void setup()
   // MOSQUITTO MQTT port 1883
   Serial.println("Connecting to Mosquitto");
   #ifdef MQTT
-    mosquitto.setServer(mqtt_server, 1883);
-    mosquitto.setCallback(mosquito_callback);
-    if(mosquitto.connect("ESP32")) {
+    connection.setServer(mqtt_server, 1883);
+    connection.setCallback(mosquito_callback);
+    if(connection.connect("ESP32")) {
       Serial.println("Mosquitto Connected!");
-      mosquitto.subscribe("esp32/output");
-      mosquitto.setCallback(mosquito_callback);
+      connection.subscribe("esp32/output");
+      connection.setCallback(mosquito_callback);
     }
     else
       Serial.print("Mosquitto state: ");
-    Serial.println(mosquitto.state());
+    Serial.println(connection.state());
   #endif
   #ifdef MQTT_SSL
-    mosquitto_ssl.setServer(mqtt_server, 8883);
+    connection.setServer(mqtt_server, 8883);
     espClientSSL.setCACert(NODE_CERT_CA);
     espClientSSL.setCertificate(NODE_CERT_CRT);
     espClientSSL.setPrivateKey(NODE_CERT_PRIVATE);
-    mosquitto_ssl.setCallback(mosquito_callback);
-    if(mosquitto_ssl.connect("ESP32")) {
+    connection.setCallback(mosquito_callback);
+    if(connection.connect("ESP32")) {
       Serial.println("Mosquitto Connected!");
-      mosquitto_ssl.subscribe("esp32/output");
-      mosquitto_ssl.setCallback(mosquito_callback);
+      connection.subscribe("esp32/output");
+      connection.setCallback(mosquito_callback);
     }
     else
       Serial.print("Mosquitto state: ");
-    Serial.println(mosquitto_ssl.state());
+    Serial.println(connection.state());
   #endif
   
 }
@@ -309,35 +309,35 @@ void loop()
   #ifdef MQTT
   Serial.println("\n==== MQTT =============");
   //mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
-  mosquitto.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(sensors_values.temperature, cstr, 10));
-  mosquitto.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(sensors_values.pressure / 100.0F, cstr, 10));
-  mosquitto.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(sensors_values.humidity, cstr, 10));
-  mosquitto.publish(MQTT_IOT_CHANNEL_0, "10");
+  connection.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(sensors_values.temperature, cstr, 10));
+  connection.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(sensors_values.pressure / 100.0F, cstr, 10));
+  connection.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(sensors_values.humidity, cstr, 10));
+  connection.publish(MQTT_IOT_CHANNEL_0, "10");
   Serial.println("test_topic: 10");
   delay(500);
-  mosquitto.publish(MQTT_IOT_CHANNEL_0, "3");
+  connection.publish(MQTT_IOT_CHANNEL_0, "3");
   Serial.println("test_topic: 3");
-  Serial.println(mosquitto.state());
+  Serial.println(connection.state());
   delay(500);
   //client.loop();
-  mosquitto.loop();
+  connection.loop();
   #endif
 
   #ifdef MQTT_SSL
     Serial.println("\n==== MQTT SSL =============");
     //mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
-    mosquitto_ssl.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(sensors_values.temperature, cstr, 10));
-    mosquitto_ssl.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(sensors_values.pressure / 100.0F, cstr, 10));
-    mosquitto_ssl.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(sensors_values.humidity, cstr, 10));
-    mosquitto_ssl.publish(MQTT_IOT_CHANNEL_0, "10");
+    connection.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(sensors_values.temperature, cstr, 10));
+    connection.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(sensors_values.pressure / 100.0F, cstr, 10));
+    connection.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(sensors_values.humidity, cstr, 10));
+    connection.publish(MQTT_IOT_CHANNEL_0, "10");
     Serial.println("test_topic: 10");
     delay(500);
-    mosquitto_ssl.publish(MQTT_IOT_CHANNEL_0, "3");
+    connection.publish(MQTT_IOT_CHANNEL_0, "3");
     Serial.println("test_topic: 3");
 
-    Serial.println(mosquitto_ssl.state());
+    Serial.println(connection.state());
     delay(500);
     //
-    mosquitto_ssl.loop();
+    connection.loop();
     #endif
 }
