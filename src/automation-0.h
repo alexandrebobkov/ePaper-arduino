@@ -1,5 +1,7 @@
 #include <SPI.h>
 #include <GxIO.h>
+#include <WiFi.h>
+//#include "secrets.h"
 
 
 #define LIGHT_SENSOR_PIN 34   // analog in pin # for a light sensor
@@ -120,6 +122,8 @@ void TaskLedCode (void * parameters) {
       }             
     }
 }
+
+
 
 /*void TaskWiFiCode (void* parameters)
 {
