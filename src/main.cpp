@@ -15,9 +15,9 @@
 
 
 
-#define MQTT_SSL
-//#define HOTSPOT
-//#define MQTT
+//#define MQTT_SSL
+#define HOTSPOT
+#define MQTT
 
 #include "automation-0.h"
 #include "mqtt.h"
@@ -279,6 +279,11 @@ void setup()
   sensors_values.pressure = 0.0;
   sensors_values.temperature = 0.0;
 
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(PING_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);  
+  digitalWrite(PING_PIN, LOW);  
+
   Serial.println("setup");  
   Serial.println("setup done");
 
@@ -357,11 +362,14 @@ void setup()
   //connection.setCallback(mosquito_callback);
   if(connection.connect("ESP32")) {
     Serial.println("Mosquitto Connected!");
+    digitalWrite(LED_PIN, HIGH);
     connection.subscribe("esp32/output");
     connection.setCallback(mosquito_callback);
   }
-  else
+  else {
     Serial.print("Mosquitto state: ");
+    digitalWrite(LED_PIN, LOW);
+  }
   Serial.println(connection.state());
   #endif
   #ifdef MQTT_SSL // MOSQUITTO MQTT port 8883
@@ -373,11 +381,14 @@ void setup()
   connection.setCallback(mosquito_callback);
   if(connection.connect("ESP32")) {
     Serial.println("Mosquitto Connected!");
+    digitalWrite(LED_PIN, HIGH);
     connection.subscribe("esp32/output");
     connection.setCallback(mosquito_callback);
   }
-  else
+  else {
     Serial.print("Mosquitto state: ");
+    digitalWrite(LED_PIN, LOW);
+  }
   Serial.println(connection.state());
   #endif
   
@@ -463,6 +474,7 @@ void loop()
   // If MQTT connected
   if (connection.connected())             // connected() == 1 => Connected
   {
+    digitalWrite(LED_PIN, HIGH);
     connection.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(sensors_values.temperature, cstr, 10));
     connection.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(sensors_values.pressure / 100.0F, cstr, 10));
     connection.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(sensors_values.humidity, cstr, 10));
@@ -479,9 +491,15 @@ void loop()
     Serial.println(WiFi.status());            // status() == 3 => Connected to WiFi
     delay(1000);
     connection.loop();
+
+    digitalWrite(PING_PIN, LOW);
+    digitalWrite(PING_PIN, HIGH);
+    delay(250);
+    digitalWrite(PING_PIN, LOW);
   }
   else
   {
+    digitalWrite(LED_PIN, LOW);
     mosquitto_connect();
   }
   /*#endif

@@ -8,6 +8,8 @@
 #define LED_PIN 32            // pin # of LED controlled by light sensor
 #define ANALOG_THRESHOLD 1800 // threshhold for analog input when logical 0 should become logical 1
 
+#define PING_PIN 33           // D33 pin # of audio ping
+
 // RGB LED
 //#define RGB_RED_PIN 11    // D14
 //#define RGB_BLUE_PIN 13  // D13
