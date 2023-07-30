@@ -11,9 +11,12 @@
 #define MICRO_SD
 #define BMP280      // Adafruit BMP280; temp & pressure
 //#define BME280    // Generic BME280; temp, pressure & humidity
-#define MQTT_SSL
-//#define MQTT
+//#define MQTT_SSL
+
 //#define AWSIoT
+
+#define HOTSPOT
+#define MQTT
 
 #include "secrets.h"
 #include <WiFi.h>
@@ -207,9 +210,10 @@ void setup()
   Serial.print("\nCONNECTED\nIP: ");  
   Serial.println(WiFi.localIP());
   
-  // MOSQUITTO MQTT port 1883
-  Serial.println("Connecting to Mosquitto");
-  #ifdef MQTT
+  Serial.print("Connecting to Mosquitto at IP: ");
+  Serial.print(mqtt_server);
+  #ifdef MQTT // MOSQUITTO MQTT port 1883
+    Serial.println(":1883");
     connection.setServer(mqtt_server, 1883);
     connection.setCallback(mosquito_callback);
     if(connection.connect("ESP32")) {
@@ -221,7 +225,8 @@ void setup()
       Serial.print("Mosquitto state: ");
     Serial.println(connection.state());
   #endif
-  #ifdef MQTT_SSL
+  #ifdef MQTT_SSL // MOSQUITTO MQTT port 8883
+    Serial.println(":8883");
     connection.setServer(mqtt_server, 8883);
     espClientSSL.setCACert(NODE_CERT_CA);
     espClientSSL.setCertificate(NODE_CERT_CRT);
