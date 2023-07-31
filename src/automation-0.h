@@ -3,12 +3,70 @@
 #include <WiFi.h>
 //#include "secrets.h"
 
+// Uncomment corresponding board
+//#define devkit_30pin_001
+#define devkit_36pin_001
+
+/*
+#### ESP32 DEVKIT V1.1 DIY MALL           ####
+#### 30 PINS                              ####
+#### DEVELOPMENT BOARD SUPPORTED PIN OUTS ####
+*/
+#ifdef devkit_30pin_001
+#define PING_PIN 33           // D33 pin # of audio ping
+#define LED_PIN 32            // pin # of LED controlled by light sensor
+#endif
+/*
+##############################################
+*/
+/*
+#### ESP32 DEVKIT V1.1 DIY MALL           ####
+#### 36 PINS                              ####
+#### DEVELOPMENT BOARD SUPPORTED PIN OUTS ####
+----------------------------------------------
+Nominal | Physical  |   Description
+Pin     |           |
+----------------------------------------------
+              2         Built-in LED
+D0            5
+D15           6
+D2            7         Same as built-in LED
+D4            8
+D5            11
+D18           12        Not supported
+D19           13        Not supported
+D21           14        Not supported
+D22           17        Not supported
+D23           18        Not supported
+D34           22        Not supported
+D35           23        Not supported
+D32           24        Not supported
+D33           25
+D25           26
+D26           27
+D27           28
+D17           29
+D14           30
+D12           31
+D13           32
+----------------------------------------------
+*/
+#ifdef devkit_36pin_001
+#define LED       2
+#define D0        5
+#define D15       6
+#define PING_PIN 33           // D33 pin # of audio ping
+#define LED_PIN 32            // pin # of LED controlled by light sensor
+#endif
+/*
+##############################################
+*/
 
 #define LIGHT_SENSOR_PIN 34   // analog in pin # for a light sensor
 #define LED_PIN 32            // pin # of LED controlled by light sensor
 #define ANALOG_THRESHOLD 1800 // threshhold for analog input when logical 0 should become logical 1
 
-#define PING_PIN 33           // D33 pin # of audio ping
+
 
 // RGB LED
 //#define RGB_RED_PIN 11    // D14

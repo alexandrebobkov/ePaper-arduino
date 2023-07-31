@@ -13,11 +13,9 @@
 //#define BME280    // Generic BME280; temp, pressure & humidity
 //#define AWSIoT
 
-
-
-//#define MQTT_SSL
-#define HOTSPOT
-#define MQTT
+#define MQTT_SSL
+//#define HOTSPOT
+//#define MQTT
 
 #include "automation-0.h"
 #include "mqtt.h"
@@ -94,8 +92,6 @@ void mosquitto_connect ()
     0 => Connected
     -2
     -4
-
-
   */
   while (!connection.connected()) {
   Serial.print("MQTT connection state: ");
@@ -131,145 +127,7 @@ void mosquitto_connect ()
   #endif
   delay(2000);
   }
-
-  /*Serial.print("MQTT connection state: ");
-  Serial.println(connection.state());
-  Serial.print("Connecting to Mosquitto at IP: ");
-  Serial.print(mqtt_server);
-  #ifdef MQTT // MOSQUITTO MQTT port 1883
-  Serial.println(":1883");
-  connection.setServer(mqtt_server, 1883);
-  //connection.setCallback(mosquito_callback);
-  if(connection.connect("ESP32")) {
-    Serial.println("Mosquitto Connected!");
-    connection.subscribe("esp32/output");
-    connection.setCallback(mosquito_callback);
-  }
-  Serial.print("Mosquitto state: ");
-  Serial.println(connection.state());
-  #endif
-  #ifdef MQTT_SSL // MOSQUITTO MQTT port 8883
-  Serial.println(":8883");
-  connection.setServer(mqtt_server, 8883);
-  espClientSSL.setCACert(NODE_CERT_CA);
-  espClientSSL.setCertificate(NODE_CERT_CRT);
-  espClientSSL.setPrivateKey(NODE_CERT_PRIVATE);
-  connection.setCallback(mosquito_callback);
-  if(connection.connect("ESP32")) {
-    Serial.println("Mosquitto Connected!");
-    connection.subscribe("esp32/output");
-    connection.setCallback(mosquito_callback);
-  }
-  Serial.print("Mosquitto state: ");
-  Serial.println(connection.state());
-  #endif*/
 }
-
-// set the callback function
-/*void setupMQTT() {
-  #ifdef MQTT
-    mosquitto.setServer(mqtt_server, 1883);
-    mosquitto.setCallback(mosquito_callback);
-  #endif
-  #ifdef MQTT_SSL
-    mosquitto_ssl.setServer(mqtt_server, 8883);
-    mosquitto_ssl.setCallback(mosquito_callback);
-  #endif
-}*/
-/*void reconnect()
-{
-  #ifdef MQTT
-  while (!mosquitto.connected())
-  {
-    if (mosquitto.connect("ESP32Client"))
-    {
-      Serial.println("connected");
-      mosquitto.subscribe("esp32/output");
-    }
-  }
-  #endif
-  #ifdef MQTT_SSL
-  while (!mosquitto_ssl.connected())
-  {
-    if (mosquitto_ssl.connect("ESP32Client"))
-    {
-      Serial.println("connected");
-      mosquitto_ssl.subscribe("esp32/output");
-    }
-  }
-  #endif
-}*/
-
-/*void mqtt_connect(PubSubClient mqtt)
-{
-  while (!mqtt.connected())
-  {
-    if (mqtt.connect("ESP32Client"))
-    {
-      Serial.println("connected");
-      mqtt.subscribe("esp32/output");
-    }
-  }
-}*/
-
-/*void WiFiNodeConnected (WiFiEvent_t event, WiFiEventInfo_t info)
-{
-  Serial.println("Connected to AP");
-}
-void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
-{
-  Serial.print("IP: ");
-  Serial.println(WiFi.localIP());
-}
-void WiFiNodeDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
-{
-  Serial.println("Disconnected from AP");
-  Serial.println(info.wifi_sta_disconnected.reason);
-  Serial.println("Reconnecting ...");
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-
-  Serial.print("Connecting to Mosquitto at IP: ");
-  Serial.print(mqtt_server);
-
-  while (!connection.connected())
-  {
-    if (connection.connect("ESP32Client"))
-    {
-      Serial.println("connected");
-      connection.subscribe("esp32/output");
-    }
-  }
-
-  #ifdef MQTT // MOSQUITTO MQTT port 1883
-    Serial.println(":1883");
-    connection.setServer(mqtt_server, 1883);
-    connection.setCallback(mosquito_callback);
-    if(connection.connect("ESP32")) {
-      Serial.println("Mosquitto Connected!");
-      connection.subscribe("esp32/output");
-      connection.setCallback(mosquito_callback);
-    }
-    else
-      Serial.print("Mosquitto state: ");
-    Serial.println(connection.state());
-  #endif
-  #ifdef MQTT_SSL // MOSQUITTO MQTT port 8883
-    Serial.println(":8883");
-    connection.setServer(mqtt_server, 8883);
-    espClientSSL.setCACert(NODE_CERT_CA);
-    espClientSSL.setCertificate(NODE_CERT_CRT);
-    espClientSSL.setPrivateKey(NODE_CERT_PRIVATE);
-    connection.setCallback(mosquito_callback);
-    if(connection.connect("ESP32")) {
-      Serial.println("Mosquitto Connected!");
-      connection.subscribe("esp32/output");
-      connection.setCallback(mosquito_callback);
-    }
-    else
-      Serial.print("Mosquitto state: ");
-    Serial.println(connection.state());
-  #endif
-}*/
 
 void setup()
 {
@@ -279,10 +137,11 @@ void setup()
   sensors_values.pressure = 0.0;
   sensors_values.temperature = 0.0;
 
-  pinMode(LED_PIN, OUTPUT);
-  pinMode(PING_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);  
-  digitalWrite(PING_PIN, LOW);  
+  #ifdef devkit_36pin_001
+  #endif
+
+  #ifdef devkit_30pin_001
+  #endif  
 
   Serial.println("setup");  
   Serial.println("setup done");
@@ -502,25 +361,4 @@ void loop()
     digitalWrite(LED_PIN, LOW);
     mosquitto_connect();
   }
-  /*#endif
-
-  #ifdef MQTT_SSL
-    Serial.println("\n==== MQTT SSL =============");
-    //mosquitto.publish(MQTT_IOT_CHANNEL_1, itoa(temp, cstr, 10));
-    connection.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(sensors_values.temperature, cstr, 10));
-    connection.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(sensors_values.pressure / 100.0F, cstr, 10));
-    connection.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(sensors_values.humidity, cstr, 10));
-    connection.publish(MQTT_IOT_CHANNEL_0, "10");
-    Serial.println("test_topic: 10");
-    delay(500);
-    connection.publish(MQTT_IOT_CHANNEL_0, "3");
-    Serial.println("test_topic: 3");
-
-    Serial.print("MQTT Status: ");
-    Serial.println(connection.state());
-    Serial.print("Connection tatus: ");
-    Serial.println(WiFi.status());
-    delay(500);
-    connection.loop();
-    #endif*/
 }
