@@ -231,7 +231,8 @@ void setup()
   if(connection.connect("ESP32")) {
     Serial.println("Mosquitto Connected!");
     digitalWrite(LED_PIN, HIGH);
-    connection.subscribe("esp32/output");
+    //connection.subscribe("esp32/output");
+    connection.subscribe("node1/output");
     connection.setCallback(mosquito_callback);
   }
   else {
@@ -247,10 +248,11 @@ void setup()
   espClientSSL.setCertificate(NODE_CERT_CRT);
   espClientSSL.setPrivateKey(NODE_CERT_PRIVATE);
   connection.setCallback(mosquito_callback);
-  if(connection.connect("ESP32")) {
+  if(connection.connect("node1")) {
     Serial.println("Mosquitto Connected!");
     digitalWrite(LED_PIN, HIGH);
-    connection.subscribe("esp32/output");
+    //connection.subscribe("esp32/output");
+    connection.subscribe("node1/output");
     connection.setCallback(mosquito_callback);
   }
   else {

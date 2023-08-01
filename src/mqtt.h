@@ -14,6 +14,8 @@
 #define MQTT_IOT_CHANNEL_TEMPERATURE "esp32/sensors/temperature"
 #define MQTT_IOT_CHANNEL_PRESSURE "esp32/sensors/pressure"
 #define MQTT_IOT_CHANNEL_HUMIDITY "esp32/sensors/humidity"
+#define MQTT_IOT_CHANNEL_SWITCH_1 "node1/output/sw1"
+#define MQTT_IOT_CHANNEL_SWITCH_2 "node1/output/sw2"
 
 #define MQTT_IOT_CHANNEL_0 "test_topic"
 #define MQTT_IOT_CHANNEL_1 "esp32/sensors/temp"
