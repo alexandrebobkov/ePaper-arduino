@@ -85,7 +85,46 @@ char cstr[16];
 
 void mosquito_callback (char* topic, byte* message, unsigned int length)
 {
-  mosquitto.mosquito_callback(topic, message, length);
+  //mosquitto.mosquito_callback(topic, message, length);
+
+  Serial.print("\nMessage arrived on topic: ");
+  Serial.print(topic);
+  Serial.print(". Message: ");
+  String messageTemp;
+
+  for (int i=0; i < length; i++)
+  {
+    Serial.print((char)message[i]);
+    messageTemp += (char)message[i];
+  }
+  Serial.println();
+
+  if (String(topic) == "esp32/output")
+  {
+    if (messageTemp == "on")
+    {
+      Serial.println("Switch 1 ON\n");
+      digitalWrite(14, LOW);
+    }
+    else if (messageTemp == "off")
+    {
+      Serial.println("Switch 1 OFF\n");
+      digitalWrite(14, HIGH);
+    }
+  }
+  if (String(topic) == "esp32/output")
+  {
+    if (messageTemp == "on")
+    {
+      Serial.println("Switch 2 ON\n");
+      digitalWrite(12, LOW);
+    }
+    else if (messageTemp == "off")
+    {
+      Serial.println("Switch 2 OFF\n");
+      digitalWrite(12, HIGH);
+    }
+  }
 }
 
 void mosquitto_connect ()
@@ -232,7 +271,7 @@ void setup()
     Serial.println("Mosquitto Connected!");
     digitalWrite(LED_PIN, HIGH);
     //connection.subscribe("esp32/output");
-    connection.subscribe("node1/output");
+    connection.subscribe("esp32/output");
     connection.setCallback(mosquito_callback);
   }
   else {
@@ -252,7 +291,7 @@ void setup()
     Serial.println("Mosquitto Connected!");
     digitalWrite(LED_PIN, HIGH);
     //connection.subscribe("esp32/output");
-    connection.subscribe("node1/output");
+    connection.subscribe("esp32/output");
     connection.setCallback(mosquito_callback);
   }
   else {
