@@ -99,7 +99,7 @@ void mosquito_callback (char* topic, byte* message, unsigned int length)
   }
   Serial.println();
 
-  if (String(topic) == "esp32/output")
+  if (String(topic) == "node1/output/sw1")
   {
     if (messageTemp == "on")
     {
@@ -112,7 +112,7 @@ void mosquito_callback (char* topic, byte* message, unsigned int length)
       digitalWrite(14, HIGH);
     }
   }
-  if (String(topic) == "esp32/output")
+  if (String(topic) == "node1/output/sw2")
   {
     if (messageTemp == "on")
     {
@@ -266,11 +266,12 @@ void setup()
   #ifdef MQTT // MOSQUITTO MQTT port 1883
   Serial.println(":1883");
   connection.setServer(mqtt_server, 1883);
-  //connection.setCallback(mosquito_callback);
   if(connection.connect("ESP32")) {
     Serial.println("Mosquitto Connected!");
     digitalWrite(LED_PIN, HIGH);
-    //connection.subscribe("esp32/output");
+    connection.subscribe(MQTT_IOT_CHANNEL_SWITCH_1);
+    connection.subscribe(MQTT_IOT_CHANNEL_SWITCH_2);
+    onnection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_PULSE);
     connection.subscribe("esp32/output");
     connection.setCallback(mosquito_callback);
   }
@@ -290,7 +291,11 @@ void setup()
   if(connection.connect("node1")) {
     Serial.println("Mosquitto Connected!");
     digitalWrite(LED_PIN, HIGH);
-    //connection.subscribe("esp32/output");
+    //connection.subscribe(MQTT_IOT_CHANNEL_SWITCH_1);
+    //connection.subscribe(MQTT_IOT_CHANNEL_SWITCH_2);
+    connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1);
+    connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2);
+    connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_PULSE);
     connection.subscribe("esp32/output");
     connection.setCallback(mosquito_callback);
   }
@@ -387,9 +392,11 @@ void loop()
     connection.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(sensors_values.temperature, cstr, 10));
     connection.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(sensors_values.pressure / 100.0F, cstr, 10));
     connection.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(sensors_values.humidity, cstr, 10));
+    connection.publish(MQTT_IOT_CHANNEL_OUTPUT_PULSE, "1");
     connection.publish(MQTT_IOT_CHANNEL_0, "10");
     Serial.println("test_topic: 10");
     delay(1000);
+    connection.publish(MQTT_IOT_CHANNEL_OUTPUT_PULSE, "0");
     connection.publish(MQTT_IOT_CHANNEL_0, "3");
     Serial.println("test_topic: 3");
     Serial.print("MQTT State: ");
