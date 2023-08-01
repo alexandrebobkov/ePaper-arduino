@@ -6,6 +6,8 @@
   July 28, 2023
 */
 
+// IoT ID
+#define IoT_ID    node1
 // Uncomment modules as required
 //#define RTC
 #define MICRO_SD
@@ -137,10 +139,16 @@ void setup()
   sensors_values.pressure = 0.0;
   sensors_values.temperature = 0.0;
 
+  // Initialize GPIO
   #ifdef devkit_36pin_001
   #endif
-
   #ifdef devkit_30pin_001
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(PING_PIN, OUTPUT);
+  pinMode(SWITCH_1, OUTPUT);
+  pinMode(SWITCH_2, OUTPUT);
+  digitalWrite(SWITCH_1, LOW);
+  digitalWrite(SWITCH_2, HIGH;
   #endif  
 
   Serial.println("setup");  

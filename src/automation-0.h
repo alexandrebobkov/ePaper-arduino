@@ -4,9 +4,10 @@
 //#include "secrets.h"
 
 // Uncomment corresponding board
-//#define devkit_30pin_001
-#define devkit_36pin_001
+#define devkit_30pin_001
+//#define devkit_36pin_001
 
+#ifdef devkit_30pin_001
 /*
 #### ESP32 DEVKIT V1.1 DIY MALL           ####
 #### 30 PINS                              ####
@@ -37,11 +38,13 @@ D12           27
 D13           28
 ----------------------------------------------
 */
-#ifdef devkit_30pin_001
-#define PING_PIN 33           // D33 pin # of audio ping
-#define LED_PIN 2            // pin # of LED controlled by light sensor
+#define PING_PIN  33  // GPIO 33 pin # of audio ping
+#define LED_PIN   32           
+#define SWITCH_1  12  // GPIO 12
+#define SWITCH_2  14  // GPIO 14
 uint8_t pins[] = {2,4,5,12,13,14,15,18,19,21,22,23,25,26,27,32,33}; // 20 GPIO pins
 #endif
+
 /*
 #### ESP32 DEVKIT V1.1 DIY MALL           ####
 #### 36 PINS                              ####
@@ -83,8 +86,8 @@ uint8_t pins[] = {};
 ##############################################
 */
 
-#define LIGHT_SENSOR_PIN 34   // analog in pin # for a light sensor
-#define LED_PIN 32            // pin # of LED controlled by light sensor
+//#define LIGHT_SENSOR_PIN 34   // analog in pin # for a light sensor
+//#define LED_PIN 32            // pin # of LED controlled by light sensor
 #define ANALOG_THRESHOLD 1800 // threshhold for analog input when logical 0 should become logical 1
 
 
@@ -97,8 +100,8 @@ uint8_t pins[] = {};
 #define RGB_B_PIN 13  // D13
 #define RGB_G_PIN 12  // D12
 
-#define SWITCH_1 33   // GPIO 33; PHYSICAL PIN # 3
-#define SWITCH_2 27   // GPIO 27; PHYSICAL PIN # 10
+//#define SWITCH_1 33   // GPIO 33; PHYSICAL PIN # 3
+//#define SWITCH_2 27   // GPIO 27; PHYSICAL PIN # 10
 //#define SWITCH_1 7  PIN 7 SAUSES STALLS
 
 /*#define ESP_INR_FLAG_DEFAULT 0
