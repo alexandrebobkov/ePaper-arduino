@@ -11,20 +11,43 @@
 #### ESP32 DEVKIT V1.1 DIY MALL           ####
 #### 30 PINS                              ####
 #### DEVELOPMENT BOARD SUPPORTED PIN OUTS ####
+----------------------------------------------
+GPIO    | Physical  |   Description
+Pin     |           |
+----------------------------------------------
+              2         Built-in LED
+D15           3
+D2            4         Built-in LED     
+D4            5
+D5            8
+D18           9         
+D19           10                
+D21           11        
+D22           14        
+D23           15        
+D34           19        Input only        
+D35           20        Input only        
+D32           21        
+D33           22
+D25           23
+D26           24
+D27           25
+D14           26
+D12           27
+D13           28
+----------------------------------------------
 */
 #ifdef devkit_30pin_001
 #define PING_PIN 33           // D33 pin # of audio ping
-#define LED_PIN 32            // pin # of LED controlled by light sensor
+#define LED_PIN 2            // pin # of LED controlled by light sensor
+uint8_t pins[] = {2,4,5,12,13,14,15,18,19,21,22,23,25,26,27,32,33}; // 20 GPIO pins
 #endif
-/*
-##############################################
-*/
 /*
 #### ESP32 DEVKIT V1.1 DIY MALL           ####
 #### 36 PINS                              ####
 #### DEVELOPMENT BOARD SUPPORTED PIN OUTS ####
 ----------------------------------------------
-Nominal | Physical  |   Description
+GPIO    | Physical  |   Description
 Pin     |           |
 ----------------------------------------------
               2         Built-in LED
@@ -33,14 +56,14 @@ D15           6
 D2            7         Same as built-in LED
 D4            8
 D5            11
-D18           12        Not supported
-D19           13        Not supported
-D21           14        Not supported
-D22           17        Not supported
-D23           18        Not supported
-D34           22        Not supported
-D35           23        Not supported
-D32           24        Not supported
+D18           12        
+D19           13        
+D21           14        
+D22           17        
+D23           18        
+D34           22        
+D35           23        
+D32           24        
 D33           25
 D25           26
 D26           27
@@ -52,11 +75,9 @@ D13           32
 ----------------------------------------------
 */
 #ifdef devkit_36pin_001
-#define LED       2
-#define D0        5
-#define D15       6
 #define PING_PIN 33           // D33 pin # of audio ping
-#define LED_PIN 32            // pin # of LED controlled by light sensor
+#define LED_PIN   2            // pin # of LED controlled by light sensor
+uint8_t pins[] = {};
 #endif
 /*
 ##############################################
