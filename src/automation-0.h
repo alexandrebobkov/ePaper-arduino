@@ -40,8 +40,8 @@ D13           28
 */
 #define PING_PIN  33  // GPIO 33 pin # of audio ping
 #define LED_PIN   32           
-#define SWITCH_1  12  // GPIO 12
-#define SWITCH_2  14  // GPIO 14
+#define SWITCH_1  14  // GPIO 14
+#define SWITCH_2  12  // GPIO 12
 uint8_t pins[] = {2,4,5,12,13,14,15,18,19,21,22,23,25,26,27,32,33}; // 20 GPIO pins
 #endif
 

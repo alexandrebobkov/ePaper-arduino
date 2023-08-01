@@ -1,4 +1,5 @@
 #include "mqtt.h"
+//#include "automation-0.h"
 
 void Mosquitto::mosquito_callback (char* topic, byte* message, unsigned int length) {
   //Serial.print("\nMessage arrived on topic: ");
@@ -6,25 +7,37 @@ void Mosquitto::mosquito_callback (char* topic, byte* message, unsigned int leng
   //Serial.print(". Message: ");
   String messageTemp;
 
-  for (int i=0; i < length; i++)
+  /*for (int i=0; i < length; i++)
   {
     //Serial.print((char)message[i]);
     messageTemp += (char)message[i];
   }
-  //Serial.println();
+  //Serial.println();*/
 
-  if (String(topic) == "esp32/output")
+  if (String(topic) == "node1/output/sw1")
   {
-    //Serial.print("Main. Changing output to: ");
     if (messageTemp == "on")
     {
-      //Serial.println("Turn switch ON!\n");
-      //digitalWrite(SWITCH_1, LOW);    // Active level LOW
+      Serial.println("Switch 1 ON\n");
+      digitalWrite(14, LOW);
     }
     else if (messageTemp == "off")
     {
-      //Serial.println("Turn switch OFF!\n");
-      //digitalWrite(SWITCH_1, HIGH);
+      Serial.println("Switch 1 OFF\n");
+      digitalWrite(14, HIGH);
+    }
+  }
+  if (String(topic) == "node1/output/sw2")
+  {
+    if (messageTemp == "on")
+    {
+      Serial.println("Switch 2 ON\n");
+      digitalWrite(12, LOW);
+    }
+    else if (messageTemp == "off")
+    {
+      Serial.println("Switch 2 OFF\n");
+      digitalWrite(12, HIGH);
     }
   }
 }

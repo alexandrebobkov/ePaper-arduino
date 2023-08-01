@@ -147,8 +147,9 @@ void setup()
   pinMode(PING_PIN, OUTPUT);
   pinMode(SWITCH_1, OUTPUT);
   pinMode(SWITCH_2, OUTPUT);
+  // Active level LOW
   digitalWrite(SWITCH_1, LOW);
-  digitalWrite(SWITCH_2, HIGH;
+  digitalWrite(SWITCH_2, LOW);
   #endif  
 
   Serial.println("setup");  
