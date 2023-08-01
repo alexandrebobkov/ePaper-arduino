@@ -14,24 +14,24 @@ void Mosquitto::mosquito_callback (char* topic, byte* message, unsigned int leng
   }
   Serial.println();
 
-  if (String(topic) == "node1/output/sw1") {
+  if (String(topic) == MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1) {
     if (messageTemp == "on") {
       Serial.println("Switch 1 ON\n");
-      digitalWrite(14, LOW);
+      digitalWrite(12, HIGH);
     }
     else if (messageTemp == "off") {
       Serial.println("Switch 1 OFF\n");
-      digitalWrite(14, HIGH);
+      digitalWrite(12, LOW);
     }
   }
-  if (String(topic) == "node1/output/sw2") {
+  if (String(topic) == MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2) {
     if (messageTemp == "on") {
       Serial.println("Switch 2 ON\n");
-      digitalWrite(12, LOW);
+      digitalWrite(14, HIGH);
     }
     else if (messageTemp == "off") {
       Serial.println("Switch 2 OFF\n");
-      digitalWrite(12, HIGH);
+      digitalWrite(14, LOW);
     }
   }
 }

@@ -389,6 +389,7 @@ void loop()
   if (connection.connected())             // connected() == 1 => Connected
   {
     digitalWrite(LED_PIN, HIGH);
+    connection.setCallback(mosquito_callback);
     connection.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(sensors_values.temperature, cstr, 10));
     connection.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(sensors_values.pressure / 100.0F, cstr, 10));
     connection.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(sensors_values.humidity, cstr, 10));
