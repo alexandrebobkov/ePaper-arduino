@@ -1,7 +1,7 @@
 #include "mqtt.h"
 //#include "automation-0.h"
 
-void Mosquitto::mosquito_callback (char* topic, byte* message, unsigned int length) {
+void Mosquitto::mosquitoCallBack (char* topic, byte* message, unsigned int length) {
   Serial.print("\nMessage arrived on topic: ");
   Serial.println(topic);
   Serial.print("Message: ");
@@ -14,7 +14,8 @@ void Mosquitto::mosquito_callback (char* topic, byte* message, unsigned int leng
   }
   Serial.println();
 
-  if (String(topic) == MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1) {
+  //if (String(topic) == MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1) {
+  if (strcmp(topic, MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1)) {
     if (messageTemp == "on") {
       Serial.println("Switch 1 ON\n");
       digitalWrite(12, HIGH);

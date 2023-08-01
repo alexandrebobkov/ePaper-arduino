@@ -28,7 +28,7 @@
 class Mosquitto
 {
     public:
-        void mosquito_callback (char* topic, byte* message, unsigned int length);
+        void mosquitoCallBack (char* topic, byte* message, unsigned int length);
 };
 
 #endif
