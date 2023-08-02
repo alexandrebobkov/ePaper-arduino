@@ -72,7 +72,7 @@ Mosquitto mosquitto = Mosquitto();
 #ifdef MQTT_SSL
 WiFiClientSecure espClientSSL = WiFiClientSecure();
 PubSubClient connection(espClientSSL); //mosquitto_ssl
-Mosquitto mosquitto = Mosquitto();
+//Mosquitto mosquitto = Mosquitto();
 #endif
 
 //AWSIoT
@@ -83,6 +83,7 @@ PubSubClient client(net);
 
 char cstr[16];
 
+//void mosquito_callback (char* topic, char* message, unsigned int length) 
 void mosquito_callback (char* topic, byte* message, unsigned int length)
 {
   //mosquitto.mosquito_callback(topic, message, length);
@@ -90,6 +91,7 @@ void mosquito_callback (char* topic, byte* message, unsigned int length)
   Serial.print("\nMessage arrived on topic: ");
   Serial.println(topic);
   Serial.print("Message: ");
+  //String messageTemp;
   String messageTemp;
 
   for (int i=0; i < length; i++)
@@ -98,20 +100,42 @@ void mosquito_callback (char* topic, byte* message, unsigned int length)
     messageTemp += (char)message[i];
   }
   Serial.println();
+  Serial.println(messageTemp);
 
-  //if (String(topic) == MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1) {
-  if (strcmp(topic, MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1)) {
+  if (strstr(topic, "esp32/sw1")) {
+    Serial.print("===== switch 1 ");
+    if (messageTemp == (String)"1") {
+    //if (strstr(message, "on")) {
+      Serial.println("on =====");
+      digitalWrite(14, HIGH);
+    }
+    if (messageTemp == (String)"2") {
+    //if (strstr(message, "off")) {
+      Serial.println("off =====");
+      digitalWrite(14, LOW);
+    }
+  }
+  if (strstr(topic, "esp32/sw2")) {
+    Serial.println("switch 2");
+  }
+
+  if (String(topic) == MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1) {
+  //if (strcmp((char *)topic, MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1)) {
+    Serial.println(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1);
     if (messageTemp == "on") {
+    //if (strcmp(messageTemp, "on")) {
       Serial.println("Switch 1 ON\n");
       digitalWrite(12, HIGH);
     }
     if (messageTemp == "off") {
+    //if (strcmp(messageTemp, "off")) {
       Serial.println("Switch 1 OFF\n");
       digitalWrite(12, LOW);
     }
   }
-  //if (String(topic) == MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2) {
-  if (strcmp(topic, MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2)) {
+  if (String(topic) == MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2) {
+  //if (strcmp((char *)topic, MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2)) {
+    Serial.println(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2);
     if (messageTemp == "on") {
       Serial.println("Switch 2 ON\n");
       digitalWrite(14, HIGH);
@@ -138,10 +162,8 @@ void mosquitto_connect ()
   #ifdef MQTT // MOSQUITTO MQTT port 1883
   Serial.println(":1883");
   connection.setServer(mqtt_server, 1883);
-  //connection.setCallback(mosquito_callback);
   if(connection.connect("ESP32")) {
     Serial.println("Mosquitto Connected!");
-    connection.subscribe("esp32/output");
     connection.setCallback(mosquito_callback);
   }
   Serial.print("Mosquitto state: ");
@@ -153,11 +175,11 @@ void mosquitto_connect ()
   espClientSSL.setCACert(NODE_CERT_CA);
   espClientSSL.setCertificate(NODE_CERT_CRT);
   espClientSSL.setPrivateKey(NODE_CERT_PRIVATE);
-  connection.setCallback(mosquito_callback);
   if(connection.connect("ESP32")) {
     Serial.println("Mosquitto Connected!");
-    connection.subscribe("esp32/output");
     connection.setCallback(mosquito_callback);
+    connection.subscribe("esp32/sw1");
+    connection.subscribe("esp32/sw2");
   }
   Serial.print("Mosquitto state: ");
   Serial.println(connection.state());
@@ -264,12 +286,8 @@ void setup()
   connection.setServer(mqtt_server, 1883);
   if(connection.connect("ESP32")) {
     Serial.println("Mosquitto Connected!");
-    digitalWrite(LED_PIN, HIGH);
-    connection.subscribe(MQTT_IOT_CHANNEL_SWITCH_1);
-    connection.subscribe(MQTT_IOT_CHANNEL_SWITCH_2);
-    onnection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_PULSE);
-    connection.subscribe("esp32/output");
     connection.setCallback(mosquito_callback);
+    digitalWrite(LED_PIN, HIGH);
   }
   else {
     Serial.print("Mosquitto state: ");
@@ -286,12 +304,10 @@ void setup()
   //connection.setCallback(mosquito_callback);
   if(connection.connect("esp32")) {
     Serial.println("Mosquitto Connected!");
-    digitalWrite(LED_PIN, HIGH);
-    connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1);
-    connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2);
-    connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_PULSE);
-    connection.subscribe("esp32/output");
+    connection.subscribe("esp32/sw1");
+    connection.subscribe("esp32/sw2");
     connection.setCallback(mosquito_callback);
+    digitalWrite(LED_PIN, HIGH);
   }
   else {
     Serial.print("Mosquitto state: ");
@@ -382,15 +398,10 @@ void loop()
   // If MQTT connected
   if (connection.connected())             // connected() == 1 => Connected
   {
+    //connection.subscribe("esp32/sw1");
+    //connection.subscribe("esp32/sw2");
+
     digitalWrite(LED_PIN, HIGH);
-    //connection.setCallback(mosquito_callback);
-    //connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1);
-    //connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2);
-
-    connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1);
-    connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2);
-    connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_PULSE);
-
     connection.publish(MQTT_IOT_CHANNEL_TEMPERATURE, itoa(sensors_values.temperature, cstr, 10));
     connection.publish(MQTT_IOT_CHANNEL_PRESSURE, itoa(sensors_values.pressure / 100.0F, cstr, 10));
     connection.publish(MQTT_IOT_CHANNEL_HUMIDITY, itoa(sensors_values.humidity, cstr, 10));
