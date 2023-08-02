@@ -83,63 +83,65 @@ PubSubClient client(net);
 
 char cstr[16];
 
-//void mosquito_callback (char* topic, char* message, unsigned int length) 
+// Listen to the subscribed topics.
+// Note: message received in bytes, not char nor String.. 
 void mosquito_callback (char* topic, byte* message, unsigned int length)
 {
   //mosquitto.mosquito_callback(topic, message, length);
 
+  // Display topic and message received.
   Serial.print("\nMessage arrived on topic: ");
   Serial.println(topic);
   Serial.print("Message: ");
-  //String messageTemp;
-  String messageTemp;
+  String messageTemp;                               // variable to temporary store message received
 
-  for (int i=0; i < length; i++)
-  {
+  // Convert message received in bytes into String
+  for (int i=0; i < length; i++) {
     Serial.print((char)message[i]);
     messageTemp += (char)message[i];
   }
   Serial.println();
   Serial.println(messageTemp);
 
+  // Identify message received
   if (strstr(topic, "esp32/sw1")) {
     Serial.print("===== switch 1 ");
     if (messageTemp == (String)"1") {
       Serial.println("on =====");
-      digitalWrite(14, HIGH);
+      digitalWrite(SWITCH_1, HIGH);
     }
     if (messageTemp == (String)"0") {
       Serial.println("off =====");
-      digitalWrite(14, LOW);
+      digitalWrite(SWITCH_1, LOW);
     }
   }
   if (strstr(topic, "esp32/sw2")) {
     Serial.println("switch 2");
     if (messageTemp == (String)"on") {
       Serial.println("on =====");
-      digitalWrite(12, HIGH);
+      digitalWrite(SWITCH_2, HIGH);
     }
     if (messageTemp == (String)"off") {
       Serial.println("off =====");
-      digitalWrite(12, LOW);
+      digitalWrite(SWITCH_2, LOW);
     }
   }
 
-  if (String(topic) == MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1) {
+  if (strstr(topic, MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1)) {
   //if (strcmp((char *)topic, MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1)) {
     Serial.println(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1);
-    if (messageTemp == "on") {
+    if (messageTemp == (String)"on") {
     //if (strcmp(messageTemp, "on")) {
       Serial.println("Switch 1 ON\n");
       digitalWrite(12, HIGH);
     }
-    if (messageTemp == "off") {
+    if (messageTemp == (String)"off") {
     //if (strcmp(messageTemp, "off")) {
       Serial.println("Switch 1 OFF\n");
       digitalWrite(12, LOW);
     }
   }
-  if (String(topic) == MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2) {
+  if (strstr(topic, MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2)) {
     Serial.println("switch 2");
     if (messageTemp == (String)"on") {
       Serial.println("on =====");
@@ -152,45 +154,48 @@ void mosquito_callback (char* topic, byte* message, unsigned int length)
   }
 }
 
+// Connect to Mosquito MQTT server.
 void mosquitto_connect ()
 {
   /*
+  Statuses for connected():
     0 => Connected
     -2
     -4
   */
   while (!connection.connected()) {
-  Serial.print("MQTT connection state: ");
-  Serial.println(connection.state());
-  Serial.print("Connecting to Mosquitto at IP: ");
-  Serial.print(mqtt_server);
-  #ifdef MQTT // MOSQUITTO MQTT port 1883
-  Serial.println(":1883");
-  connection.setServer(mqtt_server, 1883);
-  if(connection.connect("ESP32")) {
-    Serial.println("Mosquitto Connected!");
-    connection.setCallback(mosquito_callback);
-  }
-  Serial.print("Mosquitto state: ");
-  Serial.println(connection.state());
-  #endif
-  #ifdef MQTT_SSL // MOSQUITTO MQTT port 8883
-  Serial.println(":8883");
-  connection.setServer(mqtt_server, 8883);
-  espClientSSL.setCACert(NODE_CERT_CA);
-  espClientSSL.setCertificate(NODE_CERT_CRT);
-  espClientSSL.setPrivateKey(NODE_CERT_PRIVATE);
-  if(connection.connect("ESP32")) {
-    Serial.println("Mosquitto Connected!");
-    connection.setCallback(mosquito_callback);
-    connection.subscribe("esp32/sw1");
-    connection.subscribe("esp32/sw2");
-    connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2);
-  }
-  Serial.print("Mosquitto state: ");
-  Serial.println(connection.state());
-  #endif
-  delay(2000);
+    Serial.print("MQTT connection state: ");
+    Serial.println(connection.state());
+    Serial.print("Connecting to Mosquitto at IP: ");
+    Serial.print(mqtt_server);
+    #ifdef MQTT // MOSQUITTO MQTT port 1883
+    Serial.println(":1883");
+    connection.setServer(mqtt_server, 1883);
+    if(connection.connect("ESP32")) {
+      Serial.println("Mosquitto Connected!");
+      connection.setCallback(mosquito_callback);
+    }
+    Serial.print("Mosquitto state: ");
+    Serial.println(connection.state());
+    #endif
+    #ifdef MQTT_SSL // MOSQUITTO MQTT port 8883
+    Serial.println(":8883");
+    connection.setServer(mqtt_server, 8883);
+    espClientSSL.setCACert(NODE_CERT_CA);
+    espClientSSL.setCertificate(NODE_CERT_CRT);
+    espClientSSL.setPrivateKey(NODE_CERT_PRIVATE);
+    if(connection.connect("ESP32")) {
+      Serial.println("Mosquitto Connected!");
+      connection.setCallback(mosquito_callback);
+      connection.subscribe("esp32/sw1");
+      connection.subscribe("esp32/sw2");
+      connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1);
+      connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2);
+    }
+    Serial.print("Mosquitto state: ");
+    Serial.println(connection.state());
+    #endif
+    delay(2000);
   }
 }
 
@@ -210,7 +215,7 @@ void setup()
   pinMode(PING_PIN, OUTPUT);
   pinMode(SWITCH_1, OUTPUT);
   pinMode(SWITCH_2, OUTPUT);
-  // Active level LOW
+  // Active level is LOW
   digitalWrite(SWITCH_1, LOW);
   digitalWrite(SWITCH_2, LOW);
   #endif  
@@ -277,8 +282,8 @@ void setup()
   
   Serial.println("Connecting to Wi-Fi");
   
-  while (WiFi.status() != WL_CONNECTED)
-  {
+  // Connect to wifi.
+  while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print("#");
   }
@@ -325,6 +330,7 @@ void setup()
   
 }
 
+// Main loop
 void loop()
 {
   #ifdef RTC
@@ -402,9 +408,8 @@ void loop()
   Serial.println("\n==== MQTT SSL =============");
   #endif
 
-  // If MQTT connected
-  if (connection.connected())             // connected() == 1 => Connected
-  {
+  // Run main loop if MQTT server is connected
+  if (connection.connected()) {            // connected() == 1 => Connected
     //connection.subscribe("esp32/sw1");
     //connection.subscribe("esp32/sw2");
 
@@ -433,8 +438,8 @@ void loop()
     delay(250);
     digitalWrite(PING_PIN, LOW);
   }
-  else
-  {
+  // Call function to establish connection if not connected to MQTT server.
+  else {
     digitalWrite(LED_PIN, LOW);
     mosquitto_connect();
   }
