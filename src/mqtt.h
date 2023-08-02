@@ -15,6 +15,12 @@
 #define MQTT_IOT_CHANNEL_PRESSURE "esp32/sensors/pressure"
 #define MQTT_IOT_CHANNEL_HUMIDITY "esp32/sensors/humidity"
 
+//#define MQTT_IOT_CHANNEL_SWITCH_1 "node1/output/sw1"
+//#define MQTT_IOT_CHANNEL_SWITCH_2 "node1/output/sw2"
+#define MQTT_IOT_CHANNEL_OUTPUT_PULSE       "node1/output/pulse"
+#define MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1    "node1/output/sw1"
+#define MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2    "node1/sw2"
+
 #define MQTT_IOT_CHANNEL_0 "test_topic"
 #define MQTT_IOT_CHANNEL_1 "esp32/sensors/temp"
 #define MQQT_IOT_CHANNEL_9 "esp32/output"
@@ -22,7 +28,7 @@
 class Mosquitto
 {
     public:
-        void mosquito_callback (char* topic, byte* message, unsigned int length);
+        void mosquitoCallBack (char* topic, byte* message, unsigned int length);
 };
 
 #endif
