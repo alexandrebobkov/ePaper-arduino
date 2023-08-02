@@ -105,18 +105,24 @@ void mosquito_callback (char* topic, byte* message, unsigned int length)
   if (strstr(topic, "esp32/sw1")) {
     Serial.print("===== switch 1 ");
     if (messageTemp == (String)"1") {
-    //if (strstr(message, "on")) {
       Serial.println("on =====");
       digitalWrite(14, HIGH);
     }
-    if (messageTemp == (String)"2") {
-    //if (strstr(message, "off")) {
+    if (messageTemp == (String)"0") {
       Serial.println("off =====");
       digitalWrite(14, LOW);
     }
   }
   if (strstr(topic, "esp32/sw2")) {
     Serial.println("switch 2");
+    if (messageTemp == (String)"on") {
+      Serial.println("on =====");
+      digitalWrite(12, HIGH);
+    }
+    if (messageTemp == (String)"off") {
+      Serial.println("off =====");
+      digitalWrite(12, LOW);
+    }
   }
 
   if (String(topic) == MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1) {
@@ -134,15 +140,14 @@ void mosquito_callback (char* topic, byte* message, unsigned int length)
     }
   }
   if (String(topic) == MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2) {
-  //if (strcmp((char *)topic, MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2)) {
-    Serial.println(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2);
-    if (messageTemp == "on") {
-      Serial.println("Switch 2 ON\n");
-      digitalWrite(14, HIGH);
+    Serial.println("switch 2");
+    if (messageTemp == (String)"on") {
+      Serial.println("on =====");
+      digitalWrite(12, HIGH);
     }
-    if (messageTemp == "off") {
-      Serial.println("Switch 2 OFF\n");
-      digitalWrite(14, LOW);
+    if (messageTemp == (String)"off") {
+      Serial.println("off =====");
+      digitalWrite(12, LOW);
     }
   }
 }
@@ -180,6 +185,7 @@ void mosquitto_connect ()
     connection.setCallback(mosquito_callback);
     connection.subscribe("esp32/sw1");
     connection.subscribe("esp32/sw2");
+    connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2);
   }
   Serial.print("Mosquitto state: ");
   Serial.println(connection.state());
@@ -306,6 +312,7 @@ void setup()
     Serial.println("Mosquitto Connected!");
     connection.subscribe("esp32/sw1");
     connection.subscribe("esp32/sw2");
+    connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2);
     connection.setCallback(mosquito_callback);
     digitalWrite(LED_PIN, HIGH);
   }

@@ -19,7 +19,7 @@
 //#define MQTT_IOT_CHANNEL_SWITCH_2 "node1/output/sw2"
 #define MQTT_IOT_CHANNEL_OUTPUT_PULSE       "node1/output/pulse"
 #define MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1    "node1/output/sw1"
-#define MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2    "node1/output/sw2"
+#define MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2    "node1/sw2"
 
 #define MQTT_IOT_CHANNEL_0 "test_topic"
 #define MQTT_IOT_CHANNEL_1 "esp32/sensors/temp"
