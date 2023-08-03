@@ -152,6 +152,32 @@ void mosquito_callback (char* topic, byte* message, unsigned int length)
       digitalWrite(12, LOW);
     }
   }
+  if (strstr(topic, MQTT_IOT_CHANNEL_OUTPUT_PWM_1)) {
+    Serial.println(MQTT_IOT_CHANNEL_OUTPUT_PWM_1);
+    if (messageTemp == (String)"on") {
+      Serial.println("on =====");
+      //digitalWrite(DAC_CH1, HIGH);
+      dacWrite(DAC1, 255);
+    }
+    /*else if (messageTemp == (String)"off") {
+      Serial.println("off =====");
+      //digitalWrite(DAC_CH1, LOW);
+      dacWrite(DAC1, 0);
+    }
+    else {
+      int pwm1 = (int)message;
+      Serial.print("PWM-1: ");
+      Serial.println(pwm1);
+      //digitalWrite(DAC_CH1, pwm1);
+      dacWrite(DAC1, 255);
+    }*/
+    else {
+      int pwm1 = messageTemp.toInt();
+      Serial.print("PWM-1: ");
+      Serial.println(pwm1);
+      dacWrite(DAC1, pwm1);
+    }
+  }
 }
 
 // Connect to Mosquito MQTT server.
@@ -191,6 +217,7 @@ void mosquitto_connect ()
       connection.subscribe("esp32/sw2");
       connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_1);
       connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2);
+      connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_PWM_1);
     }
     Serial.print("Mosquitto state: ");
     Serial.println(connection.state());
@@ -215,9 +242,12 @@ void setup()
   pinMode(PING_PIN, OUTPUT);
   pinMode(SWITCH_1, OUTPUT);
   pinMode(SWITCH_2, OUTPUT);
+  //pinMode(DAC_CH1, OUTPUT);
   // Active level is LOW
   digitalWrite(SWITCH_1, LOW);
   digitalWrite(SWITCH_2, LOW);
+  //digitalWrite(DAC_CH1, LOW);
+  dacWrite(DAC1, 0);
   #endif  
 
   Serial.println("setup");  
@@ -318,6 +348,7 @@ void setup()
     connection.subscribe("esp32/sw1");
     connection.subscribe("esp32/sw2");
     connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_SWITCH_2);
+    connection.subscribe(MQTT_IOT_CHANNEL_OUTPUT_PWM_1);
     connection.setCallback(mosquito_callback);
     digitalWrite(LED_PIN, HIGH);
   }

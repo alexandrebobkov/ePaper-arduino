@@ -28,13 +28,13 @@ D22           14
 D23           15        
 D34           19        Input only        
 D35           20        Input only        
-D32           21        
-D33           22
-D25           23
-D26           24
+D32           21*        
+D33           22*
+D25           23*
+D26           24*
 D27           25
-D14           26
-D12           27
+D14           26*
+D12           27*
 D13           28
 ----------------------------------------------
 */
@@ -42,6 +42,8 @@ D13           28
 #define LED_PIN   32           
 #define SWITCH_1  14  // GPIO 14
 #define SWITCH_2  12  // GPIO 12
+#define DAC_CH1   25  // GPIO 25
+#define DAC_CH2   26  // GPIO 26
 uint8_t pins[] = {2,4,5,12,13,14,15,18,19,21,22,23,25,26,27,32,33}; // 20 GPIO pins
 #endif
 
