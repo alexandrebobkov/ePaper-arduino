@@ -30,11 +30,11 @@ D34           19        Input only
 D35           20        Input only        
 D32           21*        
 D33           22*
-D25           23*
-D26           24*
+D25           23*       Assigned to DAC
+D26           24*       Assigned to DAC
 D27           25
-D14           26*
-D12           27*
+D14           26*       Assigned to Switch 1
+D12           27*       Assigned to Switch 2
 D13           28
 ----------------------------------------------
 */
