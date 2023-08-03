@@ -18,7 +18,7 @@ Pin     |           |
 ----------------------------------------------
               2         Built-in LED
 D15           3
-D2            4         Built-in LED     
+D2            4     =>  Built-in LED     
 D4            5
 D5            8
 D18           9         
@@ -30,11 +30,11 @@ D34           19        Input only
 D35           20        Input only        
 D32           21*        
 D33           22*
-D25           23*       Assigned to DAC
-D26           24*       Assigned to DAC
+D25           23*   =>  Assigned to DAC
+D26           24*   =>  Assigned to DAC
 D27           25
-D14           26*       Assigned to Switch 1
-D12           27*       Assigned to Switch 2
+D14           26*   =>  Assigned to Switch 1
+D12           27*   =>  Assigned to Switch 2
 D13           28
 ----------------------------------------------
 */

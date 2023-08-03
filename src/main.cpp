@@ -38,6 +38,8 @@
 #include <Adafruit_BMP280.h>
 #endif
 
+// -> => |> <| <> || ~> ~~> \/ /\
+
 struct {
   float humidity = 0.0;
   float pressure = 0.0;
