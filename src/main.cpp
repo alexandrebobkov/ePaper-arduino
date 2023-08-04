@@ -187,7 +187,7 @@ void mosquitto_connect ()
 {
   /*
   Statuses for connected():
-    0 => Connected
+    0   => Connected
     -2
     -4
   */
