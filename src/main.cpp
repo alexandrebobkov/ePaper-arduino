@@ -228,6 +228,12 @@ void mosquitto_connect ()
   }
 }
 
+int rpm = 0;
+unsigned long t0 = 0, t1 = 0;
+int rev = 0;
+
+void rpm_fan () { rev ++; }
+
 void setup()
 {
   Serial.begin(115200);
@@ -244,6 +250,10 @@ void setup()
   pinMode(PING_PIN, OUTPUT);
   pinMode(SWITCH_1, OUTPUT);
   pinMode(SWITCH_2, OUTPUT);
+
+  pinMode(FAN_RPM, INPUT);
+  digitalWrite(FAN_RPM, HIGH);
+  attachInterrupt(digitalPinToInterrupt(FAN_RPM), rpm_fan, FALLING);
   //pinMode(DAC_CH1, OUTPUT);
   // Active level is LOW
   digitalWrite(SWITCH_1, LOW);
@@ -478,4 +488,13 @@ void loop()
     digitalWrite(LED_PIN, LOW);
     mosquitto_connect();
   }
+
+  detachInterrupt(FAN_RPM);
+  t1 = millis() - t0;
+  rpm = 60000 / (t1*rev);
+  t0 = millis();
+  rev = 0;
+  Serial.print("Fan RPM: ");
+  Serial.println(rpm);
+  attachInterrupt(FAN_RPM, rpm_fan, RISING);
 }

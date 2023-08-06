@@ -35,7 +35,7 @@ D26           24*   =>  Assigned to DAC
 D27           25
 D14           26*   =>  Assigned to Switch 1
 D12           27*   =>  Assigned to Switch 2
-D13           28
+D13           28    =>  Assigned to read RPM
 ----------------------------------------------
 */
 #define PING_PIN  33  // GPIO 33 pin # of audio ping
@@ -44,6 +44,7 @@ D13           28
 #define SWITCH_2  12  // GPIO 12
 #define DAC_CH1   25  // GPIO 25
 #define DAC_CH2   26  // GPIO 26
+#define FAN_RPM   13  // GPIO 13
 uint8_t pins[] = {2,4,5,12,13,14,15,18,19,21,22,23,25,26,27,32,33}; // 20 GPIO pins
 #endif
 
