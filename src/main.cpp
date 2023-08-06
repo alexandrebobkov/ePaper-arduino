@@ -229,7 +229,7 @@ void mosquitto_connect ()
 }
 
 int rpm = 0;
-unsigned long t0 = 0, t1 = 0;
+unsigned long t0 = 0, t1 = 0, tdelta = 0;
 int rev = 0;
 
 void rpm_fan () { rev ++; }
@@ -490,10 +490,12 @@ void loop()
   }
 
   detachInterrupt(FAN_RPM);
-  t1 = millis() - t0;
+  tdelta = millis() - t0;
+  rpm = (int)(60000 / (tdelta*rev));
+  /*t1 = millis() - t0;
   rpm = 60000 / (t1*rev);
   t0 = millis();
-  rev = 0;
+  rev = 0;*/
   Serial.print("Fan RPM: ");
   Serial.println(rpm);
   attachInterrupt(FAN_RPM, rpm_fan, RISING);
