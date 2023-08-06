@@ -490,13 +490,5 @@ void loop()
   }
 
   detachInterrupt(FAN_RPM);
-  tdelta = millis() - t0;
-  //rpm = (int)(60000 / (tdelta*rev));
-  /*t1 = millis() - t0;
-  rpm = 60000 / (t1*rev);
-  t0 = millis();
-  rev = 0;*/
-  Serial.print("Fan RPM: ");
-  Serial.println(rpm);
   attachInterrupt(FAN_RPM, rpm_fan, RISING);
 }
