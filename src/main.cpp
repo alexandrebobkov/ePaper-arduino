@@ -22,6 +22,7 @@
 #include "automation-0.h"
 #include "mqtt.h"
 #include "secrets.h"
+#include "config.h"
 
 #include <WiFi.h>
 #include <WiFiClientSecure.h>             // ESP32 library
