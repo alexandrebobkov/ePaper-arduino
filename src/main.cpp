@@ -491,7 +491,7 @@ void loop()
 
   detachInterrupt(FAN_RPM);
   tdelta = millis() - t0;
-  rpm = (int)(60000 / (tdelta*rev));
+  //rpm = (int)(60000 / (tdelta*rev));
   /*t1 = millis() - t0;
   rpm = 60000 / (t1*rev);
   t0 = millis();
