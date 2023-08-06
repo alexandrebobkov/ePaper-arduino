@@ -10,7 +10,7 @@
 #define IoT_ID    node1
 // Uncomment modules as required
 //#define RTC
-#define MICRO_SD
+//#define MICRO_SD
 #define BMP280      // Adafruit BMP280; temp & pressure
 //#define BME280    // Generic BME280; temp, pressure & humidity
 //#define AWSIoT
@@ -282,7 +282,9 @@ void setup()
     Serial.println(bmp.sensorID(),16);
     while (1);
   }
-  else {}
+  else {
+    Serial.println(bmp.sensorID(),16);
+  }
   #endif
 
   // Initialize RTC module, if defined
