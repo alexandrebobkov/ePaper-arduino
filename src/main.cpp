@@ -10,7 +10,7 @@
 #define IoT_ID    node1
 // Uncomment modules as required
 //#define RTC
-#define MICRO_SD
+//#define MICRO_SD
 #define BMP280      // Adafruit BMP280; temp & pressure
 //#define BME280    // Generic BME280; temp, pressure & humidity
 //#define AWSIoT
@@ -22,6 +22,7 @@
 #include "automation-0.h"
 #include "mqtt.h"
 #include "secrets.h"
+#include "config.h"
 
 #include <WiFi.h>
 #include <WiFiClientSecure.h>             // ESP32 library
@@ -228,6 +229,12 @@ void mosquitto_connect ()
   }
 }
 
+int rpm = 0;
+unsigned long t0 = 0, t1 = 0, tdelta = 0;
+int rev = 0;
+
+void rpm_fan () { rev ++; }
+
 void setup()
 {
   Serial.begin(115200);
@@ -244,6 +251,10 @@ void setup()
   pinMode(PING_PIN, OUTPUT);
   pinMode(SWITCH_1, OUTPUT);
   pinMode(SWITCH_2, OUTPUT);
+
+  pinMode(FAN_RPM, INPUT);
+  digitalWrite(FAN_RPM, HIGH);
+  attachInterrupt(digitalPinToInterrupt(FAN_RPM), rpm_fan, FALLING);
   //pinMode(DAC_CH1, OUTPUT);
   // Active level is LOW
   digitalWrite(SWITCH_1, LOW);
@@ -282,7 +293,9 @@ void setup()
     Serial.println(bmp.sensorID(),16);
     while (1);
   }
-  else {}
+  else {
+    Serial.println(bmp.sensorID(),16);
+  }
   #endif
 
   // Initialize RTC module, if defined
@@ -476,4 +489,7 @@ void loop()
     digitalWrite(LED_PIN, LOW);
     mosquitto_connect();
   }
+
+  detachInterrupt(FAN_RPM);
+  attachInterrupt(FAN_RPM, rpm_fan, RISING);
 }
