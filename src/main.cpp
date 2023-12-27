@@ -256,6 +256,8 @@ void LampTaskCode (void * parameters)
     {
       digitalWrite(LED_PIN, HIGH);
       vTaskDelay(10000);
+
+      
     }
 
     /*DateTime now = rtc.now();
