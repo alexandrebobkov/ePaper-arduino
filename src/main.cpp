@@ -11,8 +11,8 @@
 // Uncomment modules as required
 //#define RTC
 //#define MICRO_SD
-#define BMP280      // Adafruit BMP280; temp & pressure
-//#define BME280    // Generic BME280; temp, pressure & humidity
+//#define BMP280      // Adafruit BMP280; temp & pressure
+#define BME280    // Generic BME280; temp, pressure & humidity
 //#define AWSIoT
 
 #define MQTT_SSL
@@ -20,6 +20,7 @@
 //#define MQTT
 
 #include "automation-0.h"
+#include "dashboard.h"
 #include "mqtt.h"
 #include "secrets.h"
 #include "config.h"
@@ -38,6 +39,18 @@
 #ifdef BMP280
 #include <Adafruit_BMP280.h>
 #endif
+
+/*
+#include <GxEPD.h>
+#include <GxGDEW042Z15/GxGDEW042Z15.h>    // 4.2" b/w/r
+#include GxEPD_BitmapExamples
+// FreeFonts from Adafruit_GFX
+#include <Fonts/FreeMonoBold9pt7b.h>
+#include <Fonts/FreeMonoBold12pt7b.h>
+#include <Fonts/FreeMonoBold18pt7b.h>
+#include <Fonts/FreeMonoBold24pt7b.h>
+#include <GxIO/GxIO_SPI/GxIO_SPI.h>
+#include <GxIO/GxIO.h>*/
 
 // -> => |> <| <> || ~> ~~> \/ /\
 
@@ -239,6 +252,14 @@ void setup()
 {
   Serial.begin(115200);
   Serial.println();
+
+  display.init(115200); // enable diagnostic output on Serial
+  /*Serial.println("GxEPD_WHITE");
+  display.fillScreen(GxEPD_WHITE);
+  display.update();
+  //display.eraseDisplay();*/
+  Serial.println("setup done");
+
   sensors_values.humidity = 0.0;
   sensors_values.pressure = 0.0;
   sensors_values.temperature = 0.0;
@@ -279,8 +300,8 @@ void setup()
     while (1);
   }
   else {
-    humidity = bme.readHumidity();
-    pressure = bme.readPressure()  / 100.0F;
+    sensors_values.humidity = bme.readHumidity();
+    sensors_values.pressure = bme.readPressure()  / 100.0F;
   }
   #endif
 
@@ -409,22 +430,22 @@ void loop()
   Serial.println("\n==== BME-280 =============");
   Serial.print("Temperature = ");
   Serial.println(bme.readTemperature());
-  humidity = (float)bme.readHumidity();
+  sensors_values.humidity = (float)bme.readHumidity();
   Serial.print("Humidity = ");
   //Serial.println(bme.readHumidity());
-  Serial.print(humidity);
+  Serial.print(sensors_values.humidity);
   Serial.println("%");
-  pressure = (float)bme.readPressure() / 100.0F;
+  sensors_values.pressure = (float)bme.readPressure() / 100.0F;
   Serial.print("Pressure = ");
-  Serial.print(pressure);
+  Serial.print(sensors_values.pressure);
   Serial.println(" kPa");
-  int temp = (float)rtc.getTemperature();
-  humidity = (float)bme.readHumidity();
-  temperature = (float)bme.readTemperature();
-  pressure = (float)bme.readPressure() / 100.0F;
+  //int temp = (float)rtc.getTemperature();
+  sensors_values.humidity = (float)bme.readHumidity();
+  sensors_values.temperature = (float)bme.readTemperature();
+  sensors_values.pressure = (float)bme.readPressure() / 100.0F;
   //int min = now.minute();
   //int r = random();
-  int analogValue = analogRead(LIGHT_SENSOR_PIN);
+  //int analogValue = analogRead(LIGHT_SENSOR_PIN);
   char cstr[16];
   #endif
 
