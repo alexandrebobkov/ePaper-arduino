@@ -40,7 +40,7 @@ void TaskRefreshDisplayCode (void* parameters) {
   for (;;) {
 
     display.update();
-    vTaskDelay(10000);
+    vTaskDelay(50000);
   }
 }
 
