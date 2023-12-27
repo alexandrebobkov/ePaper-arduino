@@ -1,16 +1,16 @@
 #ifndef DASHBOARD_H
 #define DASHBOARD_N
 
-#include <GxEPD.h>
-#include <GxGDEW042Z15/GxGDEW042Z15.h>    // 4.2" b/w/r
-#include GxEPD_BitmapExamples
+#include "GxEPD.h"
+#include "GxGDEW042Z15.h"    // 4.2" b/w/r
+//#include GxEPD_BitmapExamples
 // FreeFonts from Adafruit_GFX
 /*#include <Fonts/FreeMonoBold9pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeMonoBold24pt7b.h>*/
-#include <GxIO/GxIO_SPI/GxIO_SPI.h>
-#include <GxIO/GxIO.h>
+#include "GxIO_SPI.h"
+#include "GxIO.h"
 #include <SPI.h>
 #include <SD.h>
 
