@@ -121,7 +121,7 @@ void GxGDEW042Z15::fillScreen(uint16_t color)
 void GxGDEW042Z15::update(void)
 {
   if (_current_page != -1) return;
-  _using_partial_mode = false;
+  _using_partial_mode = true;//false;
   _wakeUp();
   IO.writeCommandTransaction(0x10); // black
   for (uint32_t i = 0; i < GxGDEW042Z15_BUFFER_SIZE; i++)

@@ -48,12 +48,15 @@ void TaskUpdateDisplayCode (void* parameters) {
     //display.eraseDisplay(true);
     //display.flush();
     //display.update();
+    //display.updateToWindow(box_x, box_y, box_w, box_h, box_x, box_y);
+    //display.updateWindow(box_x, box_y, box_w, box_h);
     display.setTextColor(GxEPD_BLACK);
-    display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
-    //display.drawRect(box_x, box_y, box_w, box_h, GxEPD_BLACK);
+    //display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
+    display.drawRect(box_x, box_y, box_w, box_h, GxEPD_BLACK);
     display.setCursor(box_x, cursor_y);
     display.print(days); display.print("d "); print02d(hours); display.print(":"); print02d(minutes); display.print(":"); print02d(seconds);
-    display.updateWindow(box_x, box_y, box_w, box_h, true);
+    display.updateWindow(box_x, box_y, box_w, box_h, false);
+    //display.updateToWindow(box_x, box_y, box_x, box_y, box_w, box_h);
     vTaskDelay(10000);
   }
 }
