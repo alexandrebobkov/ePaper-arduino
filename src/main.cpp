@@ -54,36 +54,22 @@ void TaskUpdateDisplayCode (void* parameters) {
     minutes = (total_seconds / 60) % 60;
     hours = (total_seconds / 3600) % 24;
     days = (total_seconds / 3600) / 24;
-  //vTaskSuspend(NULL);
     uint16_t box_x = 10;
     uint16_t box_y = 50;
     uint16_t box_w = 170;
     uint16_t box_h = 70;
     uint16_t cursor_y = box_y + 16;
-    //display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false);
-    //display.eraseDisplay(true);
-    //display.flush();
-    //display.update();
-    //display.updateToWindow(box_x, box_y, box_w, box_h, box_x, box_y);
-    //display.updateWindow(box_x, box_y, box_w, box_h);
-    display.eraseDisplay();
-  //display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false);
-  //display.fillScreen(GxEPD_WHITE);
-  //display.setRotation(3);
+    display.fillScreen(GxEPD_WHITE);
     display.setTextColor(GxEPD_RED);
-  //display.setTextColor(GxEPD_BLACK);
     display.setFont(&FreeMonoBold12pt7b);
     display.setCursor(10, 20);
     display.println("Workdesk Automation");
     display.setTextColor(GxEPD_BLACK);
-    //display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
     display.drawRect(box_x, box_y, box_w, box_h, GxEPD_BLACK);
     display.setCursor(box_x, cursor_y);
     display.print(days); display.print("d "); print02d(hours); display.print(":"); print02d(minutes); display.print(":"); print02d(seconds);
-    //display.updateWindow(box_x, box_y, box_w, box_h, true);
-    //display.update();
-    //display.updateToWindow(box_x, box_y, box_x, box_y, box_w, box_h);
-    vTaskDelay(1000);
+    display.update();
+    vTaskDelay(10000);
   }
 }
 
@@ -96,37 +82,15 @@ void setup() {
   xTaskCreatePinnedToCore(TaskStatusLEDCode, "Status LED", 1000, NULL, 2, &TaskStatusLED, 0);
 
   display.init(115200); // enable diagnostic output on Serial
-  /*display.eraseDisplay();
-  //display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false);
-  //display.fillScreen(GxEPD_WHITE);
-  //display.setRotation(3);
-  display.setTextColor(GxEPD_RED);
-  //display.setTextColor(GxEPD_BLACK);
-  display.setFont(&FreeMonoBold12pt7b);
-  display.setCursor(10, 20);
-  display.println("Workdesk Automation");
-  display.update();*/
-  //display.eraseDisplay();
-  
+  display.fillScreen(GxEPD_WHITE);
 
   xTaskCreatePinnedToCore(TaskUpdateDisplayCode, "Update ePaper", 1000, NULL, 2, &TaskUpdateDisplay, 0);
-  xTaskCreatePinnedToCore(TaskRefreshDisplayCode, "Refresh ePaper", 1000, NULL, 2, &TaskRefreshDisplay, 0);
+  //xTaskCreatePinnedToCore(TaskRefreshDisplayCode, "Refresh ePaper", 1000, NULL, 2, &TaskRefreshDisplay, 0);
   interval = 250;
-
   Serial.println("setup done");
 }
 
-void loop() {
-  /*actual = millis();
-  previous_time = actual;
-  next_time += uint32_t(partial_update_period_s * 1000);
-  total_seconds += partial_update_period_s;
-  seconds = total_seconds % 60;
-  minutes = (total_seconds / 60) % 60;
-  hours = (total_seconds / 3600) % 24;
-  days = (total_seconds / 3600) / 24;
-  delay(1000);*/
-}
+void loop() {}
 
 void print02d(uint32_t d)
 {
