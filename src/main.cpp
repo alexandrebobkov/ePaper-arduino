@@ -37,18 +37,25 @@ void TaskStatusLEDCode (void* parameters) {
 }
 
 void TaskUpdateDisplayCode (void* parameters) {
+  for (;;) {
   //vTaskSuspend(NULL);
-  uint16_t box_x = 10;
-  uint16_t box_y = 50;
-  uint16_t box_w = 170;
-  uint16_t box_h = 20;
-  uint16_t cursor_y = box_y + 16;
-  display.setTextColor(GxEPD_BLACK);
-  display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
-  display.setCursor(box_x, cursor_y);
-  display.print(days); display.print("d "); print02d(hours); display.print(":"); print02d(minutes); display.print(":"); print02d(seconds);
-  display.updateWindow(box_x, box_y, box_w, box_h, true);
-  vTaskDelay(5000);
+    uint16_t box_x = 10;
+    uint16_t box_y = 50;
+    uint16_t box_w = 170;
+    uint16_t box_h = 70;
+    uint16_t cursor_y = box_y + 16;
+    //display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false);
+    //display.eraseDisplay(true);
+    //display.flush();
+    //display.update();
+    display.setTextColor(GxEPD_BLACK);
+    display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
+    //display.drawRect(box_x, box_y, box_w, box_h, GxEPD_BLACK);
+    display.setCursor(box_x, cursor_y);
+    display.print(days); display.print("d "); print02d(hours); display.print(":"); print02d(minutes); display.print(":"); print02d(seconds);
+    display.updateWindow(box_x, box_y, box_w, box_h, true);
+    vTaskDelay(10000);
+  }
 }
 
 void setup() {
@@ -60,9 +67,12 @@ void setup() {
   xTaskCreatePinnedToCore(TaskStatusLEDCode, "Status LED", 1000, NULL, 2, &TaskStatusLED, 0);
 
   display.init(115200); // enable diagnostic output on Serial
-  display.fillScreen(GxEPD_WHITE);
-  display.setRotation(3);
-  display.setTextColor(GxEPD_RED);
+  display.eraseDisplay();
+  //display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false);
+  //display.fillScreen(GxEPD_WHITE);
+  //display.setRotation(3);
+  //display.setTextColor(GxEPD_RED);
+  display.setTextColor(GxEPD_BLACK);
   display.setFont(&FreeMonoBold12pt7b);
   display.setCursor(10, 20);
   display.println("Workdesk Automation");
